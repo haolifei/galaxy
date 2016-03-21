@@ -4,6 +4,7 @@
 #include "master_impl.h"
 #include <gflags/gflags.h>
 #include "master_util.h"
+#include "utils/trace.h"
 #include <logging.h>
 #include <sofa/pbrpc/pbrpc.h>
 
@@ -58,6 +59,9 @@ void MasterImpl::OnSessionTimeout() {
 void MasterImpl::Init() {
     AcquireMasterLock();
     LOG(INFO, "begin to reload job descriptor from nexus");
+    if (0 != Trace::Init()) {
+        LOG(WARNING, "init trace failed");
+    } 
     ReloadJobInfo();
     ReloadLabelInfo();
     ReloadAgent();

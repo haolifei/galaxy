@@ -1741,6 +1741,7 @@ void JobManager::TraceClusterStat() {
     for (; j_it != jobs_.end(); ++j_it) {
         pod_count += j_it->second->pods_.size();
     }
+
     ClusterStat stat;
     stat.set_data_center(FLAGS_data_center);
     stat.set_total_node_count(agent_dead_count + agent_live_count);
@@ -1755,6 +1756,8 @@ void JobManager::TraceClusterStat() {
     stat.set_total_memory_assigned(mem_assigned);
     stat.set_total_pod_count(pod_count);
     stat.set_time(::baidu::common::timer::get_micros());
+    stat.set_total_job_count(jobs_.size());
+    stat.set_safe_mode(safe_mode_);
     Trace::TraceClusterStat(stat);
     trace_pool_.DelayTask(FLAGS_master_cluster_trace_interval, 
                boost::bind(&JobManager::TraceClusterStat, this));

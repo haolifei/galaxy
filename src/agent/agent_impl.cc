@@ -307,6 +307,11 @@ bool AgentImpl::Init() {
         return false;  
     }
 
+    if (0 != Trace::Init()) {
+        LOG(WARNING, "init trace failed");
+        return false;
+    }
+
     if (pod_manager_.Init() != 0) {
         LOG(WARNING, "init pod manager failed");
         return false; 
@@ -320,6 +325,7 @@ bool AgentImpl::Init() {
     if (!RegistToMaster()) {
         return false; 
     }
+
     background_threads_.DelayTask(
             FLAGS_agent_heartbeat_interval, boost::bind(&AgentImpl::KeepHeartBeat, this));
 
