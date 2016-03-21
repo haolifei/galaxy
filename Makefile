@@ -38,7 +38,7 @@ TRACE_CLIENT_OBJ = $(patsubst %.cc, %.o, $(TRACE_CLIENT_SRC))
 
 TRACE_OBJ = $(patsubst %.cpp, %.o, $(wildcard src/trace/*.cpp))
 
-AGENT_SRC = $(wildcard src/agent/agent*.cc) src/agent/pod_manager.cc src/agent/task_manager.cc src/agent/utils.cc src/agent/persistence_handler.cc src/agent/cgroups.cc src/agent/resource_collector.cc src/trace_client/trace_galaxy.cc src/trace_client/trace_sdk.cc
+AGENT_SRC = $(wildcard src/agent/agent*.cc) src/agent/pod_manager.cc src/agent/task_manager.cc src/agent/utils.cc src/agent/persistence_handler.cc src/agent/cgroups.cc src/agent/resource_collector.cc
 
 AGENT_OBJ = $(patsubst %.cc, %.o, $(AGENT_SRC))
 AGENT_HEADER = $(wildcard src/agent/*.h) 
@@ -126,8 +126,8 @@ trace_log : $(TRACE_OBJ) src/proto/log.pb.o $(LIBS)
 test_main: $(TEST_TRACE_OBJ) 
 	$(CXX) $(TEST_TRACE_OBJ) -o $@ $(FTRACE_LIBDIR)/libftrace.a $(LDFLAGS)
 
-test_agent: $(TEST_AGENT_OBJ) $(LIBS) $(OBJS) $(TRACE_CLIENT_OBJ)
-	$(CXX) $(TEST_AGENT_OBJ) $(UTILS_OBJ) $(LIBS) $(TRACE_CLIENT_OBJ) -o $@ $(LDFLAGS)
+test_agent: $(TEST_AGENT_OBJ) $(LIBS) $(OBJS)
+	$(CXX) $(TEST_AGENT_OBJ) $(UTILS_OBJ) $(LIBS) -o $@ $(LDFLAGS)
 
 test_initd: $(TEST_INITD_OBJ) $(LIBS) $(OBJS)
 	$(CXX) $(TEST_INITD_OBJ) $(LIBS) -o $@ $(LDFLAGS)

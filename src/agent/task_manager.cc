@@ -28,6 +28,7 @@
 #include "timer.h"
 #include "string_util.h"
 #include "utils/trace.h"
+#include "trace_client/trace_galaxy.h"
 
 DECLARE_string(gce_cgroup_root);
 DECLARE_string(gce_support_subsystems);
@@ -250,6 +251,12 @@ int TaskManager::ReloadTask(const TaskInfo& task) {
                               kTaskError,
                               true,
                               -1);
+        
+        baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task_info,
+                "lost initd when reloading",
+                true,
+                -1);
+        
         return 0;
     }
     // check if in deploy stage
@@ -825,6 +832,7 @@ int TaskManager::PrepareWorkspace(TaskInfo* task) {
         LOG(INFO, "task %s workspace %s", task->task_id.c_str(), task->task_workspace.c_str());
 
     } while(0);
+    
     if (!err.empty()) {
         Trace::TraceTaskEvent(TWARNING, 
                               task,
@@ -834,6 +842,11 @@ int TaskManager::PrepareWorkspace(TaskInfo* task) {
                               -1);
         return -1;
     }
+    
+     baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task, 
+             err,
+             0,
+             true);
     return 0;
 }
 
@@ -902,6 +915,11 @@ int TaskManager::DeployProcessCheck(TaskInfo* task_info) {
                               kTaskError,
                               true,
                               task_info->deploy_process.exit_code());
+        
+        baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task_info,
+                "deploy process exit error",
+                true,
+                0);
         return -1;
     }
     return 1;     
@@ -971,6 +989,12 @@ int TaskManager::RunProcessCheck(TaskInfo* task_info) {
                               kTaskError,
                               false,
                               task_info->main_process.exit_code());
+        
+        baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task_info,
+                "main process err exit",
+                false,
+                task_info->main_process.exit_code());
+        
         return -1;
     }
     LOG(INFO, "task %s main process exit 0",
@@ -1391,6 +1415,11 @@ int TaskManager::PrepareCgroupEnv(TaskInfo* task) {
                                   kTaskError,
                                   true,
                                   -1);
+            
+            baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task, 
+                    "prepare cgroup failed",
+                    true,
+                    -1);
             return -1;
         }
         LOG(INFO, "create cgroup %s success",  task->task_id.c_str());

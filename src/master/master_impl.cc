@@ -2,9 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 #include "master_impl.h"
-#include <gflags/gflags.h>
 #include "master_util.h"
 #include "utils/trace.h"
+#include "trace_client/trace_galaxy.h"
+
+#include <gflags/gflags.h>
 #include <logging.h>
 #include <sofa/pbrpc/pbrpc.h>
 
@@ -59,7 +61,7 @@ void MasterImpl::OnSessionTimeout() {
 void MasterImpl::Init() {
     AcquireMasterLock();
     LOG(INFO, "begin to reload job descriptor from nexus");
-    if (0 != Trace::Init()) {
+    if (0 != baidu::galaxy::trace::TraceGalaxtMaster::GetInstance()->Setup()) {
         LOG(WARNING, "init trace failed");
     } 
     ReloadJobInfo();
