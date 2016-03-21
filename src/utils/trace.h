@@ -37,7 +37,7 @@ public:
                                int32_t exit_code);
     static void TraceAgentEvent(AgentEvent& e);
     static void Log(::google::protobuf::Message& msg, const std::string& pk);
-    static int Init();
+    static void Init();
     static std::string GenUuid();
     Trace(){}
     ~Trace(){}
