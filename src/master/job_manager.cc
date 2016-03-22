@@ -16,6 +16,8 @@
 #include "timer.h"
 #include <logging.h>
 #include "utils/trace.h"
+#include "trace_client/trace_galaxy.h"
+#include <iostream>
 
 DECLARE_int32(master_agent_timeout);
 DECLARE_int32(master_agent_rpc_timeout);
@@ -1827,12 +1829,15 @@ void JobManager::TraceJobStat(const std::string& jobid) {
                boost::bind(&JobManager::TraceJobStat, this, jobid));
         return;
     }
+
+
     std::map<JobId, Job*>::iterator it = jobs_.find(jobid);
     if (it == jobs_.end()) {
         LOG(INFO, "stop trace job %s stat", jobid.c_str());
         return;
     }
     Trace::TraceJobStat(it->second);
+    baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceJob(it->second);
     trace_pool_.DelayTask(FLAGS_master_job_trace_interval, 
                boost::bind(&JobManager::TraceJobStat, this, jobid));
 }

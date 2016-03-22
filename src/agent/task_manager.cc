@@ -254,8 +254,8 @@ int TaskManager::ReloadTask(const TaskInfo& task) {
         
         baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task_info,
                 "lost initd when reloading",
-                true,
-                -1);
+                false,
+                0);
         
         return 0;
     }
@@ -612,6 +612,15 @@ int TaskManager::TerminateTask(TaskInfo* task_info) {
         int32_t now_time = common::timer::now_time();
         task_info->stop_timeout_point = now_time + 100;
 
+        std::string event = "call user stop command: " 
+            + stop_command + " for task "
+            + task_info->task_id;
+
+        baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task_info,
+                    event,
+                    false,
+                    0);
+
         LOG(INFO, "stop command [%s] start success for %s and forceing to kill will be %d , now is %d ",
                     stop_command.c_str(),
                     task_info->task_id.c_str(),
@@ -840,13 +849,13 @@ int TaskManager::PrepareWorkspace(TaskInfo* task) {
                               kTaskError,
                               true,
                               -1);
+
+        baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task, 
+                    err,
+                    true,
+                    -1);
         return -1;
     }
-    
-     baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task, 
-             err,
-             0,
-             true);
     return 0;
 }
 
@@ -1061,6 +1070,11 @@ void TaskManager::DelayCheckTaskStageChange(const std::string& task_id) {
     } else if (task_info->stage == kTaskStageSTOPPING) {
         int chk_res = TerminateProcessCheck(task_info);
         if (chk_res != 0) {
+            baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceTaskEvent(task_info,
+                        "clean task force",
+                        false,
+                        0);
+
             if (0 == CleanTask(task_info)) {
                 if (task_info->initd_stub != NULL) {
                     delete task_info->initd_stub; 

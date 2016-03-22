@@ -61,7 +61,7 @@ void MasterImpl::OnSessionTimeout() {
 void MasterImpl::Init() {
     AcquireMasterLock();
     LOG(INFO, "begin to reload job descriptor from nexus");
-    if (0 != baidu::galaxy::trace::TraceGalaxtMaster::GetInstance()->Setup()) {
+    if (0 != baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->Setup()) {
         LOG(WARNING, "init trace failed");
     } 
     ReloadJobInfo();
@@ -134,6 +134,7 @@ void MasterImpl::ReloadJobInfo() {
         if (ok) {
             LOG(INFO, "reload job: %s", job_info.jobid().c_str());
             job_manager_.ReloadJobInfo(job_info);
+            baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceJobEvent(job_info.jobid(), "reload");
         } else {
             LOG(WARNING, "faild to parse job_info: %s", key.c_str());
         }
@@ -181,7 +182,9 @@ void MasterImpl::SubmitJob(::google::protobuf::RpcController* /*controller*/,
     response->set_status(status);
     if (status == kOk) {
         response->set_jobid(job_id);
+        baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceJobEvent(job_id, "submit");
     }
+
     done->Run();
 }
 
@@ -193,6 +196,7 @@ void MasterImpl::UpdateJob(::google::protobuf::RpcController* /*controller*/,
     LOG(INFO, "update job %s replica %d", job_id.c_str(), request->job().replica());
     Status status = job_manager_.Update(job_id, request->job());
     response->set_status(status);
+    baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceJobEvent(job_id, "update");
     done->Run();
 }
 
@@ -220,6 +224,7 @@ void MasterImpl::TerminateJob(::google::protobuf::RpcController* ,
     LOG(INFO, "terminate job %s", job_id.c_str());
     Status status= job_manager_.Terminte(job_id);
     response->set_status(status);
+    baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceJobEvent(job_id, "terminate");
     done->Run();
 }
 
