@@ -4,6 +4,8 @@
 #include <sofa/pbrpc/pbrpc.h>
 #include <iostream>
 
+#include "trace_client/trace_util.h"
+
 DECLARE_string(agent_port);
 
 int main(int argc, char** argv) {

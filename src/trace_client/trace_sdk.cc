@@ -24,7 +24,7 @@ namespace baidu {
                     return 0;
                 }
                 
-                int Log(google::protobuf::Message* msg) {
+                int Log(const google::protobuf::Message* msg) {
                     // do nothing, just write debug msg to disk
                     assert(NULL != msg);
                     LOG(INFO, "%s", msg->DebugString().c_str());
@@ -57,12 +57,12 @@ namespace baidu {
                     return 0;
                 }
                 
-                int Log(google::protobuf::Message* msg) {
+                int Log(const google::protobuf::Message* msg) {
                     assert(_setup);
                     return AsynLog(msg);
                 }
                 
-                int SynLog(google::protobuf::Message* msg) {
+                int SynLog(const google::protobuf::Message* msg) {
                     Event_Stub* stub;
                     int ret = -1;
                     if (rpc_client_.GetStub(_server, &stub)) {
@@ -79,7 +79,7 @@ namespace baidu {
                     return ret;
                 }
                 
-                 int AsynLog(google::protobuf::Message* msg) {
+                 int AsynLog(const google::protobuf::Message* msg) {
                     Event_Stub* stub;
                     if (rpc_client_.GetStub(_server, &stub)) {
                         TraceRequest* request = new TraceRequest();

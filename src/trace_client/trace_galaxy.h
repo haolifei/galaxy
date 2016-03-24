@@ -7,10 +7,12 @@
 
 #pragma once
 #include "agent/agent_internal_infos.h"
+#include "proto/trace_log.pb.h"
 
 namespace baidu {
     namespace galaxy {
         class Job;
+        class JobDescriptor;
         namespace trace {
             class GalaxyAgentTracer {
             public:
@@ -53,6 +55,11 @@ namespace baidu {
                 
                 // TODO
                 int TraceAgentStatus(const AgentInfo* ai); 
+
+                int TraceCluster(const baidu::galaxy::trace::TraceCluster& cluster);
+
+                int TraceJobMeta(const std::string& job, 
+                            const baidu::galaxy::JobDescriptor* job_desc);
             private:
                 GalaxyMasterTracer();
                 static GalaxyMasterTracer* s_instance;

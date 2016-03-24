@@ -1761,8 +1761,28 @@ void JobManager::TraceClusterStat() {
     stat.set_total_job_count(jobs_.size());
     stat.set_safe_mode(safe_mode_);
     Trace::TraceClusterStat(stat);
+
+
+    baidu::galaxy::trace::TraceCluster tc;
+    tc.set_id(FLAGS_nexus_root_path);
+    tc.set_master(MasterUtil::SelfEndpoint());
+    tc.set_safe_mode(safe_mode_);
+    tc.set_cpu_assigned(cpu_assigned);
+    tc.set_cpu_used(cpu_used);
+    tc.set_cpu_total(cpu_total);
+    tc.set_memory_total(mem_total);
+    tc.set_memory_used(mem_used);
+    tc.set_memory_assigned(mem_assigned);
+    tc.set_agent_total(agent_dead_count + agent_live_count);
+    tc.set_agent_alive(agent_live_count);
+    tc.set_agent_dead(agent_dead_count);
+    tc.set_agent_dead(agent_dead_count);
+    tc.set_agent_offline(0);
+    tc.set_job_total(jobs_.size());
+    baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceCluster(tc);
+
     trace_pool_.DelayTask(FLAGS_master_cluster_trace_interval, 
-               boost::bind(&JobManager::TraceClusterStat, this));
+                boost::bind(&JobManager::TraceClusterStat, this));
 
 }
 

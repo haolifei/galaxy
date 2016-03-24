@@ -44,3 +44,4 @@ sandbox/work_dir/
 sandbox/gc_dir/
 test_agent
 test_initd
+*~

@@ -4,16 +4,19 @@
 #include "agent/agent_internal_infos.h"
 #include "trace_client/trace_sdk.h"
 #include "master/job_manager.h"
+#include "proto/master.pb.h"
+#include "trace_client/trace_util.h"
 
 #include <gflags/gflags.h>
 
 #include <logger.h>
 DECLARE_string(agent_ip);
+DECLARE_string(agent_port);
+DECLARE_string(nexus_root_path);
 
 namespace baidu {
     namespace galaxy {
         namespace trace {
-            const std::string MASTER = "master";
 
             GalaxyAgentTracer::GalaxyAgentTracer() {
 
@@ -47,14 +50,14 @@ namespace baidu {
                     bool inner_error,
                     int code) {
                 baidu::galaxy::trace::TracePodHistory tph;
-                tph.set_time(baidu::common::timer::get_micros());
+
+                tph.set_time(string_time(baidu::common::timer::now_time()));
                 tph.set_event(event);
                 tph.set_endpoint(FLAGS_agent_ip);
                 tph.set_errcode(code);
                 tph.set_reason(event);
                 tph.set_gc_dir(task->gc_dir);
                 tph.set_pod(task->pod_id);
-                std::cerr << "=======================" << "trace task event" << std::endl;
                 baidu::galaxy::trace::Trace::GetInstance()->Log(&tph);
                 return 0;
             }
@@ -62,10 +65,11 @@ namespace baidu {
             int GalaxyAgentTracer::TracePodStatus(const PodStatus* pod,
                     int32_t cpu_quota,
                     int64_t mem_quota) {
+                const static std::string endpoint = FLAGS_agent_ip + ":" + FLAGS_agent_port;
                 baidu::galaxy::trace::TracePod tp;
                 tp.set_id(pod->podid());
                 tp.set_state((int) pod->state());
-                tp.set_endpoint(pod->endpoint());
+                tp.set_endpoint(endpoint);
                 tp.set_version(pod->version());
                 tp.set_cpu_assigned(cpu_quota);
                 tp.set_cpu_used(pod->resource_used().millicores());
@@ -82,14 +86,14 @@ namespace baidu {
                 baidu::galaxy::trace::TracePod tp;
                 tp.set_id(pod);
                 tp.set_job(job);
-                //tp.set_start_time(baidu::common::timer::get_micros());
+                //tp.set_start_time(baidu::common::timer::now_time());
                 return 0;
             }
 
             int GalaxyAgentTracer::TracePodFinished(const std::string& pod, int errcode) {
                 baidu::galaxy::trace::TracePod tp;
                 tp.set_id(pod);
-                //tp.set_finished_time(baidu::common::timer::get_micros());
+                //tp.set_finished_time(baidu::common::timer::now_time());
                 //tp.set_err_code(errcode);
                 return 0;
             }
@@ -125,7 +129,7 @@ namespace baidu {
                         const std::string& event) {
                 baidu::galaxy::trace::TraceJobHistory tjh;
                 tjh.set_job(job);
-                tjh.set_time(baidu::common::timer::get_micros());
+                tjh.set_time(string_time(baidu::common::timer::now_time()));
                 tjh.set_event(event);
                 tjh.set_reason(event);
                 baidu::galaxy::trace::Trace::GetInstance()->Log(&tjh);
@@ -137,7 +141,7 @@ namespace baidu {
                 baidu::galaxy::trace::TraceJob tj;
                 tj.set_id(job->id_);
                 tj.set_name(job->desc_.name());
-                tj.set_cluster(MASTER);
+                tj.set_cluster(FLAGS_nexus_root_path);
                 tj.set_state(job->state_);
 
                 int32_t deploying = 0;
@@ -179,11 +183,10 @@ namespace baidu {
                 tj.set_memory(mem_used);
                 tj.set_disk_read(disk_read);
                 tj.set_disk_write(disk_write);
-                tj.set_created(job->create_time);
-                tj.set_updated(job->update_time);
+                tj.set_created(string_time(job->create_time/1000000));
+                tj.set_updated(string_time(job->update_time/1000000));
                 tj.set_user("galaxy");
 
-                std::cout << "galaxytraceJobTrace\n";
                 return baidu::galaxy::trace::Trace::GetInstance()->Log(&tj);
                 
             }
@@ -191,7 +194,7 @@ namespace baidu {
             int GalaxyMasterTracer::TraceJobStop(const std::string& id, int code) {
                 baidu::galaxy::trace::TraceJob tj;
                 tj.set_id(id);
-                //tj.set_finish_time(baidu::common::timer::get_micros());
+                tj.set_finished(string_time(baidu::common::timer::now_time()));
                 tj.set_deleted(1);
                 return baidu::galaxy::trace::Trace::GetInstance()->Log(&tj);
             }
@@ -202,9 +205,9 @@ namespace baidu {
                 baidu::galaxy::trace::TraceAgentError tae;
                 tae.set_hostname(ai->endpoint());
                 //tae.set_errno(0);
-                tae.set_time(baidu::common::timer::get_micros());
+                tae.set_time(string_time(baidu::common::timer::now_time()));
                 tae.set_agent(ai->endpoint());
-                tae.set_cluster(MASTER);
+                tae.set_cluster(FLAGS_nexus_root_path);
                 tae.set_reason(event);
                 //tae.set_deleted(0);
                 baidu::galaxy::trace::Trace::GetInstance()->Log(&tae);
@@ -216,7 +219,7 @@ namespace baidu {
                 baidu::galaxy::trace::TraceAgent ta;
                 ta.set_id(ai->endpoint());
                 ta.set_hostname(ai->endpoint());
-                ta.set_cluster(MASTER);
+                ta.set_cluster(FLAGS_nexus_root_path);
                 ta.set_state((int) ai->state());
                 ta.set_pod_total(ai->pods_size());
                 ta.set_cpu_total(ai->total().millicores());
@@ -236,6 +239,19 @@ namespace baidu {
                 baidu::galaxy::trace::Trace::GetInstance()->Log(&ta);
                 return 0;
             }
+
+            int GalaxyMasterTracer::TraceCluster(const baidu::galaxy::trace::TraceCluster& cluster) {
+                return baidu::galaxy::trace::Trace::GetInstance()->Log(&cluster);
+            }
+
+            int GalaxyMasterTracer::TraceJobMeta(const std::string& job, 
+                        const baidu::galaxy::JobDescriptor* job_desc) {
+                baidu::galaxy::trace::TraceJobMeta tjm;
+                tjm.set_job(job);
+                tjm.set_meta(job_desc->DebugString());
+                return baidu::galaxy::trace::Trace::GetInstance()->Log(&tjm);
+            }
+
         }
     }
 }

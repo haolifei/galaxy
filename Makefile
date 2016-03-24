@@ -121,7 +121,7 @@ initd_cli_server: $(INITD_SERVER_OBJ) $(LIBS) $(OBJS)
 	$(CXX) $(INITD_SERVER_OBJ) $(LIBS) -o $@ $(LDFLAGS)
 
 trace_log : $(TRACE_OBJ) src/proto/log.pb.o $(LIBS) 
-	$(CXX) $(TRACE_OBJ) src/proto/log.pb.o $(LIBS) -o $@ $(LDFLAGS) -lmysqlclient
+	$(CXX) $(TRACE_OBJ) src/proto/log.pb.o $(LIBS) -o $@ $(LDFLAGS) -lmysqlclient -ltera -lzookeeper_mt -lglog -lins_sdk -lsofa-pbrpc
 
 test_main: $(TEST_TRACE_OBJ) 
 	$(CXX) $(TEST_TRACE_OBJ) -o $@ $(FTRACE_LIBDIR)/libftrace.a $(LDFLAGS)

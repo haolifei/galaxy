@@ -23,7 +23,7 @@ namespace baidu {
                 virtual ~Trace() {}
                 virtual int Setup(const std::string& server) = 0;
                 virtual int Teradown() = 0;
-                virtual int Log(google::protobuf::Message* msg) = 0;
+                virtual int Log(const google::protobuf::Message* msg) = 0;
                 static Trace* s_instance;
             };
             

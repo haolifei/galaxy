@@ -28,7 +28,8 @@ namespace baidu {
                     ->SetPort(8306)
                     ->SetDatabase("lumia");
                 _mysql.reset(new MysqlPool(op, 10));
-                _tera_db.reset(new TeraDb());
+
+                _tera_db.reset(new TeraDb("trace"));
 
                 if (0 != _mysql->Open() || 0 != _tera_db->Open()) {
                     _mysql.reset();
