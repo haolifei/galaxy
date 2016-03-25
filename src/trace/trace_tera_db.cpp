@@ -76,13 +76,18 @@ namespace baidu {
                 for (int i = 0; i < field_size; i++) {
                     const google::protobuf::FieldDescriptor* fd = des->field(i);
                     if (ref->HasField(*msg, fd)) {
-                        has_data = true;
                         std::string k = fd->name();
                         if ("row_key" == k) {
                             continue;
                         }
                         std::string v = string_value(msg.get(), ref, fd);
-                        mutation->Put("CF", k, v);
+                        std::string c = cf(fd);
+                        if (c.empty() || v.empty()) {
+                            continue;
+                        }
+
+                        has_data = true;
+                        mutation->Put(c.c_str(), k, v);
                     }
                 }
                 
@@ -157,6 +162,33 @@ namespace baidu {
                 }
 
                 return stream.str();
+            }
+
+            std::stringTeraDb::cf(const google::protobuf::FieldDescriptor* fd) {
+                assert(NULL != fd);
+                std::string cf = "";
+                switch (fd->type()) {
+                    case google::protobuf::FieldDescriptor::TYPE_BOOL:
+                        cf = "bool";
+                        break;
+                    case google::protobuf::FieldDescriptor::TYPE_DOUBLE:
+                    case google::protobuf::FieldDescriptor::TYPE_FLOAT:
+                        cf = "double";
+                        break;
+                    case google::protobuf::FieldDescriptor::TYPE_INT32:
+                    case google::protobuf::FieldDescriptor::TYPE_INT64:
+                    case google::protobuf::FieldDescriptor::TYPE_UINT32:
+                    case google::protobuf::FieldDescriptor::TYPE_UINT64:
+                        cf = "integer";
+                        break;
+                    case google::protobuf::FieldDescriptor::TYPE_STRING:
+                    case google::protobuf::FieldDescriptor::TYPE_BYTES:
+                        cf = "string";
+                        break;
+                    default:
+                        break;
+                }
+                return cf;
             }
             
             void TeraDb::write_callback(tera::RowMutation* writer) {

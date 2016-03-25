@@ -27,6 +27,15 @@ namespace baidu {
                     
             private:
 
+                    typedef enum {
+                        kBool = 1,
+                        kDouble =2,
+                        kInteger = 3,
+                        kString = 4
+                    }DataType;
+
+                    std::string cf(const google::protobuf::FieldDescriptor* fd);
+
                 std::string TeraDb::string_value(const google::protobuf::Message* msg,
                                 const google::protobuf::Reflection* ref,
                                 const google::protobuf::FieldDescriptor* fd);

@@ -30,6 +30,7 @@ namespace baidu {
                              int64_t mem_quota);
                 int TracePodStart(const std::string& job, const std::string& pod);
                 int TracePodFinished(const std::string& pod, int errcode);
+                int TraceAgentStatus(const AgentInfo* ai);
                 
             private:
                 GalaxyAgentTracer();

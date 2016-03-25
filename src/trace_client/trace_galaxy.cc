@@ -98,6 +98,22 @@ namespace baidu {
                 return 0;
             }
 
+            int GalaxyAgentTracer::TraceAgentStatus(const AgentInfo* ai) {
+                baidu::galaxy::trace::TraceAgentMetrix tam;
+                tam.set_key(FLAGS_agent_ip);
+                tam.set_time(baidu::common::timer::now_time());
+                tam.set_cpu_assgned(ai->assigned().millicores());
+                tam.set_cpu_used(ai->used().millicores());
+                tam.set_memory_assgned(ai->assigned().memory());
+                tam.set_memory_assgned(ai->assigned().memory());
+                tam.set_disk_read(ai->used().read_bytes_ps());
+                tam.set_disk_write(ai->used().write_bytes_ps());
+                tam.set_disk_write_qps(ai->used().write_io_ps());
+                tam.set_disk_read_qps(ai->used().read_io_ps());
+                tam.set_pod_num(ai->pods_size());
+                return baidu::galaxy::trace::Trace::GetInstance()->Log(&tam);
+            }
+
             GalaxyMasterTracer::GalaxyMasterTracer() {
 
             }
