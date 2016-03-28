@@ -365,6 +365,10 @@ void JobManager::FillPodsToJob(Job* job) {
     LOG(INFO, "pod namespace_isolation is: [%d]", job->desc_.pod().namespace_isolation());
     for(int i = pods_size; i < job->desc_.replica(); i++) {
         PodId pod_id = MasterUtil::UUID();
+        if (job->desc_.has_name()) {
+            pod_id = MasterUtil::ShortName(job->desc_.name()) + "_" + pod_id;
+        }
+
         PodStatus* pod_status = new PodStatus();
         pod_status->set_podid(pod_id);
         pod_status->set_jobid(job->id_);
@@ -1127,6 +1131,7 @@ void JobManager::QueryAgentCallback(AgentAddr endpoint, const QueryRequest* requ
 
 void JobManager::UpdateAgent(const AgentInfo& agent,
                              AgentInfo* agent_in_master) {
+    agent_in_master->set_build(agent.build());
     std::stringstream ss;
     for (int i = 0; i < agent.assigned().ports_size(); i++) {
         ss << agent.assigned().ports(i) << ",";
@@ -1176,8 +1181,9 @@ void JobManager::UpdateAgent(const AgentInfo& agent,
     agent_in_master->mutable_assigned()->CopyFrom(agent.assigned());
     agent_in_master->mutable_used()->CopyFrom(agent.used());
     agent_in_master->mutable_pods()->CopyFrom(agent.pods()); 
-    LOG(INFO, "agent %s stat:version %d, mem total %ld, cpu total %d, mem assigned %ld, cpu assigend %d, mem used %ld , cpu used %d, pod size %d , used port %s",
+    LOG(INFO, "agent %s build:%s, stat:version %d, mem total %ld, cpu total %d, mem assigned %ld, cpu assigend %d, mem used %ld , cpu used %d, pod size %d , used port %s",
         agent.endpoint().c_str(),
+        agent.build().c_str(),
         agent_in_master->version(),
         agent_in_master->total().memory(), agent_in_master->total().millicores(),
         agent_in_master->assigned().memory(), agent_in_master->assigned().millicores(),
