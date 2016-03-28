@@ -29,7 +29,7 @@ namespace baidu {
                     ->SetDatabase("lumia");
                 _mysql.reset(new MysqlPool(op, 10));
 
-                _tera_db.reset(new TeraDb("trace"));
+                _tera_db.reset(new TeraDb("galaxy_proc"));
 
                 if (0 != _mysql->Open() || 0 != _tera_db->Open()) {
                     _mysql.reset();
@@ -46,6 +46,11 @@ namespace baidu {
                 _m_db["baidu.galaxy.trace.TraceCluster"] = _mysql;
                 _m_db["baidu.galaxy.trace.TraceAgentError"] = _mysql;
                 _m_db["baidu.galaxy.trace.TraceAgent"] = _mysql;
+
+                _m_db["baidu.galaxy.trace.TracePodMetrix"] = _tera_db;
+                _m_db["baidu.galaxy.trace.TraceAgentMetrix"] = _tera_db;
+                _m_db["baidu.galaxy.trace.TraceJobMerix"] = _tera_db;
+                _m_db["baidu.galaxy.trace.TraceAgent"] = _tera_db;
                 return 0;
             }
 

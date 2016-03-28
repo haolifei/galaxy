@@ -19,9 +19,10 @@
 #include "trace_tera_db.h"
 #include "trace_tera_table.h"
 #include "tera.h"
-#include "counter.h"
+#include <counter.h>
 
 #include <sstream>
+#include <iostream>
 
 namespace baidu {
     namespace galaxy {
@@ -52,24 +53,41 @@ namespace baidu {
 
             int TeraDb::Write(boost::shared_ptr<google::protobuf::Message> msg) {
 
+                std::cout << "traceteradb" << std::endl;
                 const google::protobuf::Reflection* ref = msg->GetReflection();
                 const google::protobuf::Descriptor* des = msg->GetDescriptor();
 
-                const google::protobuf::FieldDescriptor* fdes = des->FindFieldByName("row_key");
+                const google::protobuf::FieldDescriptor* fdes = des->FindFieldByName("key");
                 if (NULL == fdes) {
                     return -1;
                 }
-
+               
                 if (fdes->type() != google::protobuf::FieldDescriptor::TYPE_BYTES &&
                         fdes->type() != google::protobuf::FieldDescriptor::TYPE_STRING) {
                     return -1;
                 }
-                std::string row_key = ref->GetString(*msg, fdes);
-                if (row_key.empty()) {
+                std::string key = ref->GetString(*msg, fdes);
+                if (key.empty()) {
                     return -1;
                 }
 
-                tera::RowMutation* mutation = _tera_table->table()->NewRowMutation(row_key);
+                fdes = des->FindFieldByName("time");
+                if (NULL == fdes) {
+                    return -1;
+                }
+
+                if (fdes->type() != google::protobuf::FieldDescriptor::TYPE_INT64) {
+                    return -1;
+                }
+                int64_t t = ref->GetInt64(*msg, fdes);
+
+                std::stringstream srk;
+                srk << key << "#";
+                srk.width(10);
+                srk << (int32_t)t;
+
+
+                tera::RowMutation* mutation = _tera_table->table()->NewRowMutation(srk.str());
 
                 int field_size = des->field_count();
                 bool has_data = false;
@@ -77,7 +95,7 @@ namespace baidu {
                     const google::protobuf::FieldDescriptor* fd = des->field(i);
                     if (ref->HasField(*msg, fd)) {
                         std::string k = fd->name();
-                        if ("row_key" == k) {
+                        if ("key" == k || "time" == k) {
                             continue;
                         }
                         std::string v = string_value(msg.get(), ref, fd);
@@ -164,7 +182,7 @@ namespace baidu {
                 return stream.str();
             }
 
-            std::stringTeraDb::cf(const google::protobuf::FieldDescriptor* fd) {
+            std::string TeraDb::cf(const google::protobuf::FieldDescriptor* fd) {
                 assert(NULL != fd);
                 std::string cf = "";
                 switch (fd->type()) {

@@ -74,6 +74,14 @@ void AgentImpl::Query(::google::protobuf::RpcController* /*cntl*/,
     MutexLock scope_lock(&lock_);
     resp->set_status(kOk);
     AgentInfo agent_info; 
+    UpdateAgentInfo(agent_info);
+    LOG(INFO, "query pods size %u", agent_info.pods().size());
+    resp->mutable_agent()->CopyFrom(agent_info);
+    done->Run();
+    return;
+}
+
+void AgentImpl::UpdateAgentInfo(AgentInfo& agent_info) {
     agent_info.set_endpoint(endpoint_);
     agent_info.mutable_total()->set_millicores(
             FLAGS_agent_millicores_share);
@@ -93,23 +101,27 @@ void AgentImpl::Query(::google::protobuf::RpcController* /*cntl*/,
     int64_t memory_used = 0;
     std::vector<PodInfo> pods;
     pod_manager_.ShowPods(&pods);
-    LOG(INFO, "query pods size %u", pods.size());
+    
     std::vector<PodInfo>::iterator it = pods.begin();
     for (; it != pods.end(); ++it) {
         PodStatus* pod_status = agent_info.add_pods();         
         pod_status->CopyFrom(it->pod_status);
         millicores += pod_status->resource_used().millicores();
         memory_used += pod_status->resource_used().memory();
-        LOG(DEBUG, "query pod %s job %s state %s", 
-                pod_status->podid().c_str(), 
-                pod_status->jobid().c_str(),
-                PodState_Name(pod_status->state()).c_str());
     }
     agent_info.mutable_used()->set_millicores(millicores);
     agent_info.mutable_used()->set_memory(memory_used);
-    resp->mutable_agent()->CopyFrom(agent_info);
-    done->Run();
-    return;
+}
+
+void AgentImpl::TraceAgentResource() {
+    MutexLock scope_lock(&lock_);
+    AgentInfo agent_info; 
+    UpdateAgentInfo(agent_info);
+    baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TraceAgentStatus(&agent_info);
+    background_threads_.DelayTask(
+                20000, 
+                boost::bind(&AgentImpl::TraceAgentResource, this)); 
+
 }
 
 void AgentImpl::CreatePodInfo(
@@ -334,9 +346,12 @@ bool AgentImpl::Init() {
     background_threads_.DelayTask(
                 500, 
                 boost::bind(&AgentImpl::LoopCheckPods, this)); 
+    
     if (FLAGS_enable_resource_minitor) {
         background_threads_.AddTask(boost::bind(&AgentImpl::CheckSysHealth, this));
     }
+
+    background_threads_.AddTask(boost::bind(&AgentImpl::TraceAgentResource, this));
     return true;
 }
 
@@ -527,6 +542,7 @@ void AgentImpl::ShowPods(::google::protobuf::RpcController* /*cntl*/,
 }
 
 void AgentImpl::CheckSysHealth() {
+    
     int coll_rlt = resource_collector_.CollectStatistics();
     if (coll_rlt == 1) {
         LOG(WARNING, "CollectStatistics fail");

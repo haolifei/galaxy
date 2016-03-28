@@ -76,6 +76,9 @@ private:
                        PodInfo* pod_info);
     
     void CheckSysHealth();
+    
+    void UpdateAgentInfo(AgentInfo& agent_info);
+    void TraceAgentResource();
 
     struct ResourceCapacity {
         int64_t millicores; 

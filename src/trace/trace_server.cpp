@@ -1,6 +1,7 @@
 
 #include "trace_server.h"
 #include "trace_db_factory.h"
+#include "trace_tera_table.h"
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
@@ -20,6 +21,7 @@ namespace baidu {
 
 
             int TraceServer::Setup() {
+                TeraTable::set_up("./tera.flag");
                 _thead_pool.reset(new ThreadPool(10));
                 _db_factory.reset(new DbFactory());
                 return _db_factory->Init();
