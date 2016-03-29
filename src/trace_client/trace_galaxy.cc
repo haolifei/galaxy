@@ -58,6 +58,7 @@ namespace baidu {
                 tph.set_reason(event);
                 tph.set_gc_dir(task->gc_dir);
                 tph.set_pod(task->pod_id);
+                tph.set_job(task->job_id);
                 baidu::galaxy::trace::Trace::GetInstance()->Log(&tph);
                 return 0;
             }
