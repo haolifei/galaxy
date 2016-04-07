@@ -161,7 +161,7 @@ void MasterUtil::ResetLabels(AgentInfo* agent,
 
 std::string MasterUtil::ShortName(const std::string& job_name) {
     std::string name = boost::replace_all_copy(job_name, " ", "-");
-    return name.substr(0, 20);
+    return name.substr(0, 12);
 }
 
 }
