@@ -1,7 +1,15 @@
 #include "trace_db_factory.h"
 #include "trace_mysql_db_pool.h"
 #include <assert.h>
+#include <gflags/gflags.h>
 #include <iostream>
+
+DECLARE_string(mysql_host);
+DECLARE_int32(mysql_port);
+DECLARE_string(mysql_user);
+DECLARE_string(mysql_passwd);
+DECLARE_string(mysql_database);
+DECLARE_int32(mysql_write_thread_num);
 
 namespace baidu {
     namespace galaxy {
@@ -22,12 +30,12 @@ namespace baidu {
                 assert(NULL == _tera_db.get());
 
                 boost::shared_ptr<MysqlDb::Option> op(new MysqlDb::Option());
-                op->SetServer("127.0.0.1")
-                    ->SetUser("root")
-                    ->SetPasswd("galaxy")
-                    ->SetPort(8306)
-                    ->SetDatabase("lumia");
-                _mysql.reset(new MysqlPool(op, 10));
+                op->SetServer(FLAGS_mysql_host)
+                    ->SetUser(FLAGS_mysql_user)
+                    ->SetPasswd(FLAGS_mysql_passwd)
+                    ->SetPort(FLAGS_mysql_port)
+                    ->SetDatabase(FLAGS_mysql_database);
+                _mysql.reset(new MysqlPool(op, FLAGS_mysql_write_thread_num));
 
                 _tera_db.reset(new TeraDb("galaxy_proc"));
 

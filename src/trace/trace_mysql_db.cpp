@@ -68,7 +68,6 @@ namespace baidu {
 
             int MysqlDb::Write(boost::shared_ptr<google::protobuf::Message> msg) {
                 assert(_opened);
-                std::cout << "=================" << _translator << std::endl;
                 std::string sql = _translator->translate(msg);
                 if (sql.empty()) {
                     return -1;

@@ -7,9 +7,17 @@
 #include "trace_client/trace_util.h"
 
 DECLARE_string(agent_port);
+DECLARE_string(trace_server_address);
 
 int main(int argc, char** argv) {
-    google::ParseCommandLineFlags(&argc, &argv, true);
+    if (argc != 2) {
+        std::cout << "usage: " << argv[0] << " trace.flag" << std::endl;
+        return -1;
+    }
+
+    google::ReadFromFlagsFile(argv[1], NULL, true);
+    //google::ParseCommandLineFlags(&argc, &argv, true);
+
     sofa::pbrpc::RpcServerOptions options;
     sofa::pbrpc::RpcServer rpc_server(options);
     
@@ -22,7 +30,7 @@ int main(int argc, char** argv) {
     //LOG(INFO) << "set up trace server successfully";
     
     rpc_server.RegisterService(service);
-    std::string service_host = std::string("0.0.0.0:8888");// + FLAGS_agent_port;
+    std::string service_host = std::string(FLAGS_trace_server_address);
     if (!rpc_server.Start(service_host)) {
         std::cout << "start trace server failed" << std::endl;
         //LOG(FATAL) << "setup trace server failed:" << service_host;

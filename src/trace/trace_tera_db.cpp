@@ -52,8 +52,6 @@ namespace baidu {
             }
 
             int TeraDb::Write(boost::shared_ptr<google::protobuf::Message> msg) {
-
-                std::cout << "traceteradb" << std::endl;
                 const google::protobuf::Reflection* ref = msg->GetReflection();
                 const google::protobuf::Descriptor* des = msg->GetDescriptor();
 

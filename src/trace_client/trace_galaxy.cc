@@ -13,6 +13,14 @@
 DECLARE_string(agent_ip);
 DECLARE_string(agent_port);
 DECLARE_string(nexus_root_path);
+DECLARE_string(trace_transfer_server_addr);
+DECLARE_bool(enable_trace_log);
+
+#define RETURN_IF_DISABLE_TRACE(ret) do { \
+    if(!FLAGS_enable_trace_log) { \
+        return ret; \
+    } \
+} while(0)
 
 namespace baidu {
     namespace galaxy {
@@ -32,8 +40,10 @@ namespace baidu {
             }
 
             int GalaxyAgentTracer::Setup() {
-                std::string trace_server = "10.86.58.29:8888";
-                if (0 != baidu::galaxy::trace::Trace::GetInstance()->Setup(trace_server)) {
+                RETURN_IF_DISABLE_TRACE(0);
+
+                //std::string trace_server = "10.86.58.29:8888";
+                if (0 != baidu::galaxy::trace::Trace::GetInstance()->Setup(FLAGS_trace_transfer_server_addr)) {
                     LOG(WARNING, "set up trace server failed");
                     return -1;
                 }
@@ -42,6 +52,7 @@ namespace baidu {
             }
 
             int GalaxyAgentTracer::TearDown() {
+                RETURN_IF_DISABLE_TRACE(0);
                 return 0;
             }
 
@@ -49,8 +60,10 @@ namespace baidu {
                     const std::string& event,
                     bool inner_error,
                     int code) {
-                baidu::galaxy::trace::TracePodHistory tph;
 
+                RETURN_IF_DISABLE_TRACE(0);
+
+                baidu::galaxy::trace::TracePodHistory tph;
                 tph.set_time(string_time(baidu::common::timer::now_time()));
                 tph.set_event(event);
                 tph.set_endpoint(FLAGS_agent_ip);
@@ -66,6 +79,8 @@ namespace baidu {
             int GalaxyAgentTracer::TracePodStatus(const PodStatus* pod,
                     int32_t cpu_quota,
                     int64_t mem_quota) {
+
+                RETURN_IF_DISABLE_TRACE(0);
                 const static std::string endpoint = FLAGS_agent_ip + ":" + FLAGS_agent_port;
                 baidu::galaxy::trace::TracePod tp;
                 tp.set_id(pod->podid());
@@ -84,6 +99,7 @@ namespace baidu {
             }
 
             int GalaxyAgentTracer::TracePodStart(const std::string& job, const std::string& pod) {
+                RETURN_IF_DISABLE_TRACE(0);
                 baidu::galaxy::trace::TracePod tp;
                 tp.set_id(pod);
                 tp.set_job(job);
@@ -92,6 +108,8 @@ namespace baidu {
             }
 
             int GalaxyAgentTracer::TracePodFinished(const std::string& pod, int errcode) {
+                RETURN_IF_DISABLE_TRACE(0);
+
                 baidu::galaxy::trace::TracePod tp;
                 tp.set_id(pod);
                 //tp.set_finished_time(baidu::common::timer::now_time());
@@ -100,6 +118,8 @@ namespace baidu {
             }
 
             int GalaxyAgentTracer::TraceAgentStatus(const AgentInfo* ai) {
+                RETURN_IF_DISABLE_TRACE(0);
+
                 baidu::galaxy::trace::TraceAgentMetrix tam;
                 tam.set_key(FLAGS_agent_ip);
                 tam.set_time(baidu::common::timer::now_time());
@@ -129,6 +149,8 @@ namespace baidu {
             }
 
             int GalaxyMasterTracer::Setup() {
+                RETURN_IF_DISABLE_TRACE(0);
+
                 std::string trace_server = "10.86.58.29:8888";
                 if (0 != baidu::galaxy::trace::Trace::GetInstance()->Setup(trace_server)) {
                     LOG(WARNING, "set up trace server failed");
@@ -139,12 +161,16 @@ namespace baidu {
             }
 
             int GalaxyMasterTracer::TearDown() {
+                RETURN_IF_DISABLE_TRACE(0);
+
                 return 0;
             }
 
             int GalaxyMasterTracer::TraceJobEvent(const std::string& job,
                         const std::string& event) {
                 baidu::galaxy::trace::TraceJobHistory tjh;
+                RETURN_IF_DISABLE_TRACE(0);
+
                 tjh.set_job(job);
                 tjh.set_time(string_time(baidu::common::timer::now_time()));
                 tjh.set_event(event);
@@ -154,6 +180,8 @@ namespace baidu {
             }
 
             int GalaxyMasterTracer::TraceJob(const Job* job) {
+                RETURN_IF_DISABLE_TRACE(0);
+
                 assert(NULL != job);
                 baidu::galaxy::trace::TraceJob tj;
                 tj.set_id(job->id_);
@@ -209,6 +237,8 @@ namespace baidu {
             }
           
             int GalaxyMasterTracer::TraceJobStop(const std::string& id, int code) {
+                RETURN_IF_DISABLE_TRACE(0);
+
                 baidu::galaxy::trace::TraceJob tj;
                 tj.set_id(id);
                 tj.set_finished(string_time(baidu::common::timer::now_time()));
@@ -219,6 +249,8 @@ namespace baidu {
             int GalaxyMasterTracer::TraceAgentEvent(const AgentInfo* ai, 
                         const std::string& event, 
                         int code) {
+                RETURN_IF_DISABLE_TRACE(0);
+
                 baidu::galaxy::trace::TraceAgentError tae;
                 tae.set_hostname(ai->endpoint());
                 //tae.set_errno(0);
@@ -233,6 +265,7 @@ namespace baidu {
 
             int GalaxyMasterTracer::TraceAgentStatus(const AgentInfo* ai) {
                 assert(NULL != ai);
+                RETURN_IF_DISABLE_TRACE(0);
                 baidu::galaxy::trace::TraceAgent ta;
                 ta.set_id(ai->endpoint());
                 ta.set_hostname(ai->endpoint());
@@ -258,11 +291,13 @@ namespace baidu {
             }
 
             int GalaxyMasterTracer::TraceCluster(const baidu::galaxy::trace::TraceCluster& cluster) {
+                RETURN_IF_DISABLE_TRACE(0);
                 return baidu::galaxy::trace::Trace::GetInstance()->Log(&cluster);
             }
 
             int GalaxyMasterTracer::TraceJobMeta(const std::string& job, 
                         const baidu::galaxy::JobDescriptor* job_desc) {
+                RETURN_IF_DISABLE_TRACE(0);
                 baidu::galaxy::trace::TraceJobMeta tjm;
                 tjm.set_job(job);
                 tjm.set_meta(job_desc->DebugString());

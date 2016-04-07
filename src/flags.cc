@@ -93,6 +93,7 @@ DEFINE_int32(cli_server_port, 8775, "cli server listen port");
 
 DEFINE_string(trace_conf, "", "the conf of trace");
 DEFINE_bool(enable_trace, false, "open trace");
+
 DEFINE_bool(enable_resource_minitor, false, "open resource monitor");
 DEFINE_int32(stat_check_period, 1000, "agent check health period(ms)");
 DEFINE_int32(agent_recover_threshold, 3600, "threshold for agent recover from offline(stat times)");
@@ -111,3 +112,6 @@ DEFINE_double(max_intr_rate, 0.0, "max interupt times per second");
 DEFINE_double(max_soft_intr_rate, 0.0, "max soft interupt times per second");
 DEFINE_int32(max_ex_time, 0, "max exception time");
 DEFINE_string(loop_dev_file, "/home/.FS_on_file_galaxy_agent", "loop device file for agent");
+
+DEFINE_string(trace_transfer_server_addr, "", "address of trace transfer server");
+DEFINE_bool(enable_trace_log, false, "enable trace log");

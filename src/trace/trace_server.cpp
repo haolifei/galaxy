@@ -5,8 +5,11 @@
 
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/message.h>
+#include <gflags/gflags.h>
 
 #include <iostream>
+
+DECLARE_string(tera_flag);
 
 namespace baidu {
     namespace galaxy {
@@ -21,7 +24,7 @@ namespace baidu {
 
 
             int TraceServer::Setup() {
-                TeraTable::set_up("./tera.flag");
+                TeraTable::set_up(FLAGS_tera_flag);
                 _thead_pool.reset(new ThreadPool(10));
                 _db_factory.reset(new DbFactory());
                 return _db_factory->Init();
@@ -49,7 +52,6 @@ namespace baidu {
             
              void TraceServer::WriteDbProc(boost::shared_ptr<google::protobuf::Message> msg) {
                  boost::shared_ptr<Db> db = _db_factory->GetDb(msg);
-                 std::cout << "=============================" << msg->GetDescriptor()->full_name() << std::endl;
                  if (NULL != db.get()) {
                      if(0 != db->Write(msg)) {
                          std::cout << "write db failed" << msg->GetDescriptor()->full_name() << std::endl;
