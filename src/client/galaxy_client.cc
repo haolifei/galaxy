@@ -494,7 +494,7 @@ int ListAgent() {
     baidu::galaxy::Galaxy* galaxy = baidu::galaxy::Galaxy::ConnectGalaxy(FLAGS_nexus_servers, master_key);
     while (true) {
         std::vector<baidu::galaxy::NodeDescription> agents;
-        baidu::common::TPrinter tp(12);
+        baidu::common::TPrinter tp(12, 60);
         tp.AddRow(12, "", "addr", "build", "state", "pods", "cpu_used", "cpu_assigned", "cpu_total", "mem_used", "mem_assigned", "mem_total", "labels");
         if (galaxy->ListAgents(&agents)) {
             for (uint32_t i = 0; i < agents.size(); i++) {

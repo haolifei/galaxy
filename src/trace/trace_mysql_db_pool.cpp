@@ -44,8 +44,8 @@ namespace baidu {
                     if (_index >= _size) {
                         _index = 0;
                     }
+                    return _db_pool[_index]->Write(msg);
                 }
-                return _db_pool[_index]->Write(msg);
             }
             
             int MysqlPool::Close() {
