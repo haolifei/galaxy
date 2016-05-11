@@ -515,9 +515,9 @@ void AgentImpl::CollectPodStat(const std::string& podid) {
                         pod_info.pod_desc.requirement().millicores(),
                         pod_info.pod_desc.requirement().memory());
     
-    baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TracePodStatus(&pod_info.pod_status,
+    /*baidu::galaxy::trace::GalaxyAgentTracer::GetInstance()->TracePodStatus(&pod_info.pod_status,
             pod_info.pod_desc.requirement().millicores(),
-             pod_info.pod_desc.requirement().memory());
+             pod_info.pod_desc.requirement().memory());*/
     
     trace_pool_.DelayTask(FLAGS_agent_trace_pod_interval,
             boost::bind(&AgentImpl::CollectPodStat, this, podid));

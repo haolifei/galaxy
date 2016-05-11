@@ -120,6 +120,7 @@ namespace baidu {
             int GalaxyAgentTracer::TraceAgentStatus(const AgentInfo* ai) {
                 RETURN_IF_DISABLE_TRACE(0);
 
+                return 0;
                 baidu::galaxy::trace::TraceAgentMetrix tam;
                 tam.set_key(FLAGS_agent_ip);
                 tam.set_time(baidu::common::timer::now_time());
