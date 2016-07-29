@@ -472,12 +472,18 @@ int BuildJobFromConfig(const std::string& config, ::baidu::galaxy::JobDescriptio
                     return -1;
                 }
             }
+
+            res->read_io_ps = 0L;
             if (tasks_json[i]["requirement"].HasMember("read_io_ps")) {
                 res->read_io_ps = tasks_json[i]["requirement"]["read_io_ps"].GetInt64();
             }
+
+            res->write_io_ps = 0L;
             if (tasks_json[i]["requirement"].HasMember("write_io_ps")) {
                 res->write_io_ps = tasks_json[i]["requirement"]["write_io_ps"].GetInt64();
             }
+
+            res->io_weight = 500L;
             if (tasks_json[i]["requirement"].HasMember("io_weight")) {
                 res->io_weight = tasks_json[i]["requirement"]["io_weight"].GetInt();
                 if (res->io_weight < 10 || res->io_weight > 1000) {

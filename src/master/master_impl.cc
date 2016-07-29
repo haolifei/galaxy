@@ -167,8 +167,8 @@ void MasterImpl::ReloadJobInfo() {
             LOG(INFO, "reload job: %s", job_info.jobid().c_str());
             job_manager_.ReloadJobInfo(job_info);
             baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceJobEvent(job_info.jobid(), "reload");
-            baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceJobMeta(job_info.jobid(),
-                        &job_info.desc());
+            // baidu::galaxy::trace::GalaxyMasterTracer::GetInstance()->TraceJobMeta(job_info.jobid(),
+            //            &job_info.desc());
         } else {
             LOG(WARNING, "faild to parse job_info: %s", key.c_str());
         }
