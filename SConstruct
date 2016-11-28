@@ -21,6 +21,12 @@ env.Program('resman', Glob('src/resman/*.cc') + Glob('src/utils/*.cc')
 env.Program('appmaster', Glob('src/appmaster/*.cc') + Glob('src/utils/*.cc')
             + ['src/protocol/appmaster.pb.cc', 'src/protocol/galaxy.pb.cc', 'src/protocol/resman.pb.cc', 'src/naming/private_sdk.cc'])
 
+env.Program('appmaster_v2', Glob('src/appmaster_v2/job/*.cc') 
+    + Glob('src/utils/*.cc') 
+    + Glob('src/protocol/*.pb.cc')
+    + Glob('src/appmaster_v2/*.cc')
+    + Glob('src/appmaster_v2/nexus/*.cc'))
+
 env.Program('appworker', Glob('src/appworker/*.cc') + Glob('src/utils/*.cc')
             + ['src/protocol/galaxy.pb.cc', 'src/protocol/appmaster.pb.cc', 'src/protocol/appworker.pb.cc'])
 
