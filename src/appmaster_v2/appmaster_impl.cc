@@ -41,9 +41,17 @@ AppMasterImpl::~AppMasterImpl() {
 }
 
 
-void AppMasterImpl::Setup() {
+baidu::galaxy::util::ErrorCode AppMasterImpl::Setup() {
     running_ = true;
     resman_endpoint_ = "yq01-tera0.yq01.baidu.com:8645";
+
+    baidu::galaxy::util::ErrorCode ec = job_manager_->Setup();
+    if (ec.Code() != 0) {
+        return ERRORCODE(-1,
+                    "set up job-manager failed: %s", 
+                    ec.Message().c_str());
+    }
+    return ERRORCODE_OK;
 }
 
 void AppMasterImpl::SubmitJob(::google::protobuf::RpcController* controller,

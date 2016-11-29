@@ -9,7 +9,12 @@
 #include "protocol/appmaster.pb.h"
 
 #include "glog/logging.h"
+#include "gflags/gflags.h"
 
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+
+DECLARE_int32(appmaster_check_finishedjob_interval);
 namespace baidu {
 namespace galaxy {
 namespace am {
@@ -19,6 +24,15 @@ JobManager::JobManager() :
 }
 
 JobManager::~JobManager() {
+}
+
+
+baidu::galaxy::util::ErrorCode JobManager::Setup() {
+    //1 Load meta from nexus
+
+    //2 start loop
+    FinishedJobCheckLoop(FLAGS_appmaster_check_finishedjob_interval);
+    return ERRORCODE_OK;
 }
 
 baidu::galaxy::util::ErrorCode JobManager::Submit(
@@ -94,7 +108,7 @@ baidu::galaxy::util::ErrorCode JobManager::RemoveJob(const JobId& id,
             proto::RemoveContainerGroupResponse* response) {
     assert(NULL != response);
     boost::mutex::scoped_lock lock(mutex_);
-    std::map<JobId, boost::shared_ptr<RuntimeJob> >::const_iterator iter
+    std::map<JobId, boost::shared_ptr<RuntimeJob> >::iterator iter
         = rt_jobs_.find(id);
 
     if (iter == rt_jobs_.end()) {
@@ -102,6 +116,8 @@ baidu::galaxy::util::ErrorCode JobManager::RemoveJob(const JobId& id,
         response->mutable_error_code()->set_reason("job is not found");
         return ERRORCODE(0, "job %s donot exist", id.c_str());
     }
+
+    iter->second->job_tracker()->Destroy();
 
     // FIXME: write to nexus when job'status changed
     //baidu::galaxy::nexus::NexusProxy::GetInstance()->Put();
@@ -126,6 +142,7 @@ void JobManager::ListJobs(proto::ListJobsResponse* response) {
         jo->set_status(jt->Status());
         jo->set_running_num(cnt.running_num);
         jo->set_pending_num(cnt.pending_num);
+        jo->set_deploying_num(cnt.deploying_num);
         jo->set_death_num(cnt.death_num);
         jo->set_fail_count(cnt.failed_num);
         jo->set_create_time(0);
@@ -182,11 +199,15 @@ void JobManager::FinishedJobCheckLoop(int interval) {
         if (jt->Status() == proto::kJobDestroying
                     && jt->PodSize() == 0) {
             LOG(INFO) << "job " << iter->first << " is finished";
+            jt->TearDown();
             rt_jobs_.erase(iter++);
             continue;
         }
         iter++;
     }
+    job_tracker_threadpool_->DelayTask(interval * 1000, 
+                boost::bind(&JobManager::FinishedJobCheckLoop, this, interval));
+
 }
 
 }

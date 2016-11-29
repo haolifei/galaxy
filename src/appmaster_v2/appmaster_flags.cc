@@ -13,9 +13,11 @@ DEFINE_string(appmaster_port, "1647", "appmaster listen port");
 DEFINE_string(appmaster_ip, "", "appmaster host ip");
 DEFINE_string(appworker_cmdline, "", "appworker default cmdline");
 
+
+DEFINE_int32(appmaster_check_finishedjob_interval, 10, "[sec] the interval job tracker will check if job is finished or not");
 DEFINE_int32(appmaster_check_deadpod_interval, 10, "[sec] the interval job tracker will check if pod is alive or not");
 DEFINE_int32(appmaster_check_deploy_interval, 10, "[sec] the interval job tracker will check if updating step is achived");
-DEFINE_int32(master_pod_dead_threshhold, 60, "[sec] master pod overtime threshold");
+DEFINE_int32(master_pod_dead_threshhold, 30, "[sec] master pod overtime threshold");
 
 DEFINE_int32(master_fail_last_threshold, 3600, "master pod fail status lasts time threshold");
 DEFINE_int32(safe_interval, 20, "master safe mode interval");

@@ -25,7 +25,7 @@ public:
     AppMasterImpl();
     virtual ~AppMasterImpl();
     //void Init();
-    void Setup();
+    baidu::galaxy::util::ErrorCode Setup();
     void SubmitJob(::google::protobuf::RpcController* controller,
                   const ::baidu::galaxy::proto::SubmitJobRequest* request,
                   ::baidu::galaxy::proto::SubmitJobResponse* response,

@@ -100,6 +100,8 @@ void JobTracker::CheckDeployLoop(int32_t interval) {
             iter++;
         }
 
+        std::cerr << "------" << deploying_cnt << " " << need_deploying_cnt << std::endl;
+
         if (need_deploying_cnt > 0
                 && deploying_cnt < (int)desc_->deploy().step()) {
             iter = runtime_pods_.begin();
@@ -147,8 +149,7 @@ baidu::galaxy::util::ErrorCode JobTracker::HandleFetch(
 
     if (iter == this->runtime_pods_index_.end()) {
         rt_pod.reset(new RuntimePod(request.podid()));
-        rt_pod->set_expect_version(version_)
-        ->update_updating_time();
+        rt_pod->update_updating_time();
         runtime_pods_index_[request.podid()] = rt_pod;
         runtime_pods_.push_back(rt_pod);
     } else {
@@ -171,10 +172,7 @@ baidu::galaxy::util::ErrorCode JobTracker::HandleFetch(
 
     if (baidu::galaxy::proto::kJobPending == status_) {
         // process pending pod
-        response.mutable_error_code()->set_status(baidu::galaxy::proto::kOk);
-        response.mutable_pod()->CopyFrom(desc_->pod());
-        status_ = baidu::galaxy::proto::kJobRunning;
-        response.set_update_time(rt_pod->expect_version());
+        response.mutable_error_code()->set_status(proto::kSuspend);
         LOG(INFO) << id_ << " transfer to kJobRunning status";
         status_ = baidu::galaxy::proto::kJobRunning;
     } else if (baidu::galaxy::proto::kJobRunning == status_) {
@@ -374,8 +372,13 @@ void JobTracker::Destroy() {
     // FIXME: check status is confict or not
     boost::mutex::scoped_lock lock(mutex_);
     status_ = proto::kJobDestroying;
-    running_pool_->CancelTask(check_dead_thread_);
+    //running_pool_->CancelTask(check_dead_thread_);
     running_pool_->CancelTask(check_deploy_thread_);
+}
+
+void JobTracker::TearDown() {
+    boost::mutex::scoped_lock lock(mutex_);
+    running_pool_->CancelTask(check_dead_thread_);
 }
 
 

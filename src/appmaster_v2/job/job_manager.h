@@ -79,6 +79,7 @@ public:
     JobManager();
     ~JobManager();
 
+    baidu::galaxy::util::ErrorCode Setup();
 
     baidu::galaxy::util::ErrorCode Submit(
             const JobId& id,

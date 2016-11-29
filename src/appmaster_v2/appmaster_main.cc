@@ -44,7 +44,12 @@ int main(int argc, char* argv[]) {
     }
 
     boost::scoped_ptr<baidu::galaxy::am::AppMasterImpl> appmaster(new baidu::galaxy::am::AppMasterImpl());
-    appmaster->Setup();
+    ec = appmaster->Setup();
+    if (ec.Code() != 0) {
+        LOG(WARNING) << "appmaster is setup failed, and will exit: " 
+            << ec.Message();
+        exit(-1);
+    }
    
     // start service
     sofa::pbrpc::RpcServerOptions options;

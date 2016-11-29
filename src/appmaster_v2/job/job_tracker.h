@@ -60,6 +60,7 @@ public:
             baidu::galaxy::proto::FetchTaskResponse& response);
 
     void Destroy();
+    void TearDown();
 
     // read
     const JobId& Id();
