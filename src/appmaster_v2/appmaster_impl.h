@@ -34,7 +34,7 @@ public:
     void UpdateJob(::google::protobuf::RpcController* controller,
                   const ::baidu::galaxy::proto::UpdateJobRequest* request,
                   ::baidu::galaxy::proto::UpdateJobResponse* response,
-                  ::google::protobuf::Closure* done) {}
+                  ::google::protobuf::Closure* done);
 
     void RemoveJob(::google::protobuf::RpcController* controller,
                   const ::baidu::galaxy::proto::RemoveJobRequest* request,
@@ -75,7 +75,8 @@ private:
                                        const proto::CreateContainerGroupRequest* request,
                                        proto::CreateContainerGroupResponse* response,
                                        bool failed, int err) ;
-    void UpdateContainerGroupCallBack(proto::JobDescription job_desc, 
+    void UpdateContainerGroupCallBack(int breakpoint, 
+                                    proto::JobDescription job_desc, 
                                      proto::UpdateJobResponse* update_response,
                                      ::google::protobuf::Closure* done,
                                      const proto::UpdateContainerGroupRequest* request,
@@ -85,7 +86,9 @@ private:
                                  ::google::protobuf::Closure* done,
                                  const proto::UpdateContainerGroupRequest* request,
                                  proto::UpdateContainerGroupResponse* response,
-                                 bool failed, int err);
+                                 bool failed, 
+                                 int err);
+
     void RemoveContainerGroupCallBack(::baidu::galaxy::proto::RemoveJobResponse* remove_response,
                                       ::google::protobuf::Closure* done,
                                       const proto::RemoveContainerGroupRequest* request,

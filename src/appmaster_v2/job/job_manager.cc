@@ -28,9 +28,13 @@ JobManager::~JobManager() {
 
 
 baidu::galaxy::util::ErrorCode JobManager::Setup() {
-    //1 Load meta from nexus
+    // 1 Load meta from nexus
 
-    //2 start loop
+    // 2 setup job action checker
+    jobaction_checker_.Setup();
+
+
+    // 3 start loop
     FinishedJobCheckLoop(FLAGS_appmaster_check_finishedjob_interval);
     return ERRORCODE_OK;
 }
@@ -68,26 +72,34 @@ baidu::galaxy::util::ErrorCode JobManager::HandleFetch(const baidu::galaxy::prot
 
 
 
-baidu::galaxy::util::ErrorCode UpdateContinue(const JobId& id, int breakpoint) {
+baidu::galaxy::util::ErrorCode JobManager::UpdateContinue(const JobId& id, 
+            int breakpoint,
+            proto::ErrorCode* pec) {
     assert(breakpoint >= 0);
+    assert(NULL != pec);
+
     return ERRORCODE_OK;
 }
 
-baidu::galaxy::util::ErrorCode PauseUpdating(const JobId& id) {
+baidu::galaxy::util::ErrorCode JobManager::PauseUpdating(const JobId& id,
+            proto::ErrorCode* pec) {
     return ERRORCODE_OK;
 }
 
-baidu::galaxy::util::ErrorCode RollbackUpdating(const JobId& id) {
+baidu::galaxy::util::ErrorCode JobManager::RollbackUpdating(const JobId& id,
+            proto::ErrorCode* pec) {
     return ERRORCODE_OK;
 }
 
-baidu::galaxy::util::ErrorCode CancelUpdating(const JobId& id) {
+baidu::galaxy::util::ErrorCode JobManager::CancelUpdating(const JobId& id,
+            proto::ErrorCode* pec) {
     return ERRORCODE_OK;
 }
 
 baidu::galaxy::util::ErrorCode JobManager::UpdateJob(const JobId& id,
         const baidu::galaxy::proto::JobDescription& desc,
-        int breakpoint) {
+        int breakpoint,
+        proto::ErrorCode* pec) {
     // check if job exists or not
     boost::shared_ptr<RuntimeJob> rt_job;
     {
@@ -208,6 +220,22 @@ void JobManager::FinishedJobCheckLoop(int interval) {
     job_tracker_threadpool_->DelayTask(interval * 1000, 
                 boost::bind(&JobManager::FinishedJobCheckLoop, this, interval));
 
+}
+
+baidu::galaxy::util::ErrorCode JobManager::CheckAction(const JobId& id, proto::JobEvent action) {
+    boost::mutex::scoped_lock lock(mutex_);
+    std::map<JobId, boost::shared_ptr<RuntimeJob> >::iterator iter = rt_jobs_.find(id);
+    if (iter == rt_jobs_.end()) {
+        return ERRORCODE(-1, "job donot exist");
+    }
+
+    proto::JobStatus status = iter->second->job_tracker()->Status();
+    baidu::galaxy::util::ErrorCode ec = jobaction_checker_.CheckAction(status, action);
+    if (ec.Code() != 0) {
+        LOG(WARNING) << id << " status conflict: " << ec.Message();
+        return ERRORCODE(-1, "check action failed: %s", ec.Message().c_str());
+    }
+    return ERRORCODE_OK;
 }
 
 }

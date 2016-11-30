@@ -5,6 +5,7 @@
 #pragma once
 #include "job.h"
 #include "job_tracker.h"
+#include "job_action_checker.h"
 #include "boost/thread/mutex.hpp"
 #include "protocol/resman.pb.h"
 
@@ -88,12 +89,22 @@ public:
 
     baidu::galaxy::util::ErrorCode UpdateJob(const JobId& id,
             const baidu::galaxy::proto::JobDescription& desc,
-            int breakpoint);
+            int breakpoint,
+            proto::ErrorCode* pec);
 
-    baidu::galaxy::util::ErrorCode UpdateContinue(const JobId& id, int breakpoint);
-    baidu::galaxy::util::ErrorCode PauseUpdating(const JobId& id);
-    baidu::galaxy::util::ErrorCode RollbackUpdating(const JobId& id);
-    baidu::galaxy::util::ErrorCode CancelUpdating(const JobId& id);
+    baidu::galaxy::util::ErrorCode UpdateContinue(const JobId& id, 
+                int breakpoint,
+                proto::ErrorCode* pec);
+
+    baidu::galaxy::util::ErrorCode PauseUpdating(const JobId& id,
+                proto::ErrorCode* pec);
+
+    baidu::galaxy::util::ErrorCode RollbackUpdating(const JobId& id,
+                proto::ErrorCode* pec);
+
+    baidu::galaxy::util::ErrorCode CancelUpdating(const JobId& id,
+                proto::ErrorCode* pec);
+
     baidu::galaxy::util::ErrorCode RemoveJob(const JobId& id, 
             proto::RemoveContainerGroupResponse* response);
  
@@ -102,12 +113,16 @@ public:
 
     void ListJobs(proto::ListJobsResponse* response);
     baidu::galaxy::util::ErrorCode ShowJob(const JobId& id, proto::ShowJobResponse* response);
+
+    baidu::galaxy::util::ErrorCode CheckAction(const JobId& id, proto::JobEvent);
 private:
     void FinishedJobCheckLoop(int interval);
+    void BuildAllowAction();
 
     std::map<JobId, boost::shared_ptr<RuntimeJob> > rt_jobs_;
     boost::mutex mutex_;
     boost::shared_ptr<baidu::common::ThreadPool> job_tracker_threadpool_;
+    JobActionChecker jobaction_checker_;
 };
 }
 }
