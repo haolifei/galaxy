@@ -334,11 +334,8 @@ message JobDescription {
     repeated string pool_names = 8;
     repeated string volum_jobs = 9;
     optional bool v2_support = 10;
-<<<<<<< HEAD
     optional string appmaster_path = 11;
-=======
-    optional VolumViewType volum_view = 11 [default = kVolumViewTypeEmpty];
->>>>>>> 69bba14e8f4fc215962721f783e1ef55fc26a27e
+    optional VolumViewType volum_view = 12 [default = kVolumViewTypeEmpty];
 }
 
 ///////////////////////////////////////
@@ -371,11 +368,8 @@ message ContainerDescription {
     repeated string volum_containers = 12; //set by Resman
     optional ContainerType container_type = 13 [default = kNormalContainer];
     optional bool v2_support = 14 [default = false];
-<<<<<<< HEAD
     optional string appmaster_path = 15;
-=======
-    optional VolumViewType volum_view = 15 [default = kVolumViewTypeEmpty];
->>>>>>> 69bba14e8f4fc215962721f783e1ef55fc26a27e
+    optional VolumViewType volum_view = 16 [default = kVolumViewTypeEmpty];
 }
 
 message ContainerMeta {
