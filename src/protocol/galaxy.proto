@@ -146,6 +146,7 @@ message VolumRequired {
     optional bool readonly = 6;       // default: false
     optional bool exclusive = 7;      // default: false
     optional bool use_symlink = 8;    // use symlink or not, workspace dir use symlink default
+    optional bool origin = 9 [default = false];    // use origin disk, default is false
 }
 
 /////////////////////////////////////////
@@ -316,6 +317,12 @@ message PodDescription {
     // schedule-policy is necessary ?
 }
 
+enum VolumViewType {
+    kVolumViewTypeEmpty = 0;
+    kVolumViewTypeInner = 1;
+    kVolumViewTypeExtra = 2;
+}
+
 message JobDescription {
     optional string name = 1;
     optional uint32 priority = 2;
@@ -327,16 +334,19 @@ message JobDescription {
     repeated string pool_names = 8;
     repeated string volum_jobs = 9;
     optional bool v2_support = 10;
+<<<<<<< HEAD
     optional string appmaster_path = 11;
+=======
+    optional VolumViewType volum_view = 11 [default = kVolumViewTypeEmpty];
+>>>>>>> 69bba14e8f4fc215962721f783e1ef55fc26a27e
 }
-
 
 ///////////////////////////////////////
 ////container
 ///////////////////////////////////////
 
 message Cgroup {
-   optional string id = 1; 
+   optional string id = 1;
    optional CpuRequired cpu = 2;
    optional MemoryRequired memory = 3;
    optional TcpthrotRequired tcp_throt = 4;
@@ -361,7 +371,11 @@ message ContainerDescription {
     repeated string volum_containers = 12; //set by Resman
     optional ContainerType container_type = 13 [default = kNormalContainer];
     optional bool v2_support = 14 [default = false];
+<<<<<<< HEAD
     optional string appmaster_path = 15;
+=======
+    optional VolumViewType volum_view = 15 [default = kVolumViewTypeEmpty];
+>>>>>>> 69bba14e8f4fc215962721f783e1ef55fc26a27e
 }
 
 message ContainerMeta {
