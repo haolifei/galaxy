@@ -27,6 +27,8 @@ JobTracker::JobTracker(const JobId& jobid, const baidu::galaxy::proto::JobDescri
     version_(baidu::common::timer::get_micros()),
     last_version_(0L),
     status_(baidu::galaxy::proto::kJobPending),
+    update_action_(proto::kActionNull),
+    breakpoint_(desc.deploy().replica()),
     running_(false),
     check_dead_thread_(0L),
     check_deploy_thread_(0L) {
@@ -89,25 +91,31 @@ void JobTracker::CheckDeployLoop(int32_t interval) {
         std::list<boost::shared_ptr<RuntimePod> >::iterator iter = runtime_pods_.begin();
         int32_t deploying_cnt = 0;
         int32_t need_deploying_cnt = 0;
+        
+        int32_t same_version_cnt = 0; // expect version == job version
 
+        
         while (iter != runtime_pods_.end()) {
             if ((*iter)->PodInDeploying(version_, FLAGS_deploying_pod_timeout)) {
                 deploying_cnt++;
-            } else if ((*iter)->PodNeedUpdate(version_)) {
+            } 
+            
+            if ((*iter)->PodNeedUpdate(version_)) {
                 need_deploying_cnt++;
+            } else {
+                same_version_cnt++;
             }
-
             iter++;
         }
 
-        std::cerr << "------" << deploying_cnt << " " << need_deploying_cnt << std::endl;
-
         if (need_deploying_cnt > 0
-                && deploying_cnt < (int)desc_->deploy().step()) {
+                && deploying_cnt < (int)desc_->deploy().step()
+                && same_version_cnt < breakpoint_) {
             iter = runtime_pods_.begin();
             int32_t to_deploy_cnt = (int)desc_->deploy().step() - deploying_cnt;
-            int real_add_cnt = 0;
+            to_deploy_cnt = to_deploy_cnt > breakpoint_ - same_version_cnt ?  breakpoint_ - same_version_cnt : to_deploy_cnt;
 
+            int real_add_cnt = 0;
             while (iter != runtime_pods_.end() && to_deploy_cnt) {
                 if ((*iter)->PodNeedUpdate(version_)) {
                     (*iter)->set_expect_version(version_);
@@ -245,15 +253,44 @@ void JobTracker::ExportPodDescription(const baidu::galaxy::proto::JobDescription
 }
 
 baidu::galaxy::util::ErrorCode JobTracker::Update(const baidu::galaxy::proto::JobDescription& desc,
-        int breakpoint) {
+        int breakpoint,
+        bool res_changed
+        ) {
+    // check if need updating or not
+    boost::mutex::scoped_lock lock(mutex_);
+    breakpoint_ = breakpoint_ > (int)desc_->deploy().replica() ? desc_->deploy().replica() : breakpoint;
+    breakpoint_ = breakpoint_ < 0 ? 0 : breakpoint_;
+
+
+    if (res_changed) {
+        update_action_ = proto::kActionRecreate;
+        last_desc_ = desc_;
+        desc_->CopyFrom(desc);
+        status_ = proto::kJobUpdating;
+    } else if (IsExePackageDiff(desc, *desc_) || IsDataPackageDiff(desc, *desc_)) {
+        update_action_ = proto::kActionRebuild;
+        last_desc_ = desc_;
+        desc_->CopyFrom(desc);
+        status_ = proto::kJobUpdating;
+    } else if (IsDeployDiff(desc, *desc_) || IsServiceDiff(desc, *desc_)) {
+        last_desc_ = desc_;
+        desc_->CopyFrom(desc);
+    } else {
+        LOG(INFO) << "nonthing changed, " << id_;
+    }
     return ERRORCODE_OK;
 }
 
 baidu::galaxy::util::ErrorCode JobTracker::ContinueUpdating(int breakpoint) {
+    boost::mutex::scoped_lock lock(mutex_);
+    breakpoint_ = breakpoint_ > (int)desc_->deploy().replica() ? desc_->deploy().replica() : breakpoint;
+    breakpoint_ = breakpoint_ < 0 ? 0 : breakpoint_;
+
     return ERRORCODE_OK;
 }
 
 baidu::galaxy::util::ErrorCode JobTracker::PauseUpdating() {
+
     return ERRORCODE_OK;
 }
 
@@ -380,9 +417,6 @@ void JobTracker::TearDown() {
     boost::mutex::scoped_lock lock(mutex_);
     running_pool_->CancelTask(check_dead_thread_);
 }
-
-
-
 
 
 }

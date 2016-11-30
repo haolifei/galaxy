@@ -75,9 +75,7 @@ baidu::galaxy::util::ErrorCode JobManager::HandleFetch(const baidu::galaxy::prot
 baidu::galaxy::util::ErrorCode JobManager::UpdateContinue(const JobId& id, 
             int breakpoint,
             proto::ErrorCode* pec) {
-    assert(breakpoint >= 0);
     assert(NULL != pec);
-
     return ERRORCODE_OK;
 }
 
@@ -99,8 +97,8 @@ baidu::galaxy::util::ErrorCode JobManager::CancelUpdating(const JobId& id,
 baidu::galaxy::util::ErrorCode JobManager::UpdateJob(const JobId& id,
         const baidu::galaxy::proto::JobDescription& desc,
         int breakpoint,
+        bool res_changed,
         proto::ErrorCode* pec) {
-    // check if job exists or not
     boost::shared_ptr<RuntimeJob> rt_job;
     {
         boost::mutex::scoped_lock lock(mutex_);
@@ -113,7 +111,7 @@ baidu::galaxy::util::ErrorCode JobManager::UpdateJob(const JobId& id,
 
         rt_job = iter->second;
     }
-    return rt_job->job_tracker()->Update(desc, breakpoint);
+    return rt_job->job_tracker()->Update(desc, breakpoint, res_changed);
 }
 
 baidu::galaxy::util::ErrorCode JobManager::RemoveJob(const JobId& id, 

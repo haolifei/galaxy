@@ -90,6 +90,7 @@ public:
     baidu::galaxy::util::ErrorCode UpdateJob(const JobId& id,
             const baidu::galaxy::proto::JobDescription& desc,
             int breakpoint,
+            bool res_changed,
             proto::ErrorCode* pec);
 
     baidu::galaxy::util::ErrorCode UpdateContinue(const JobId& id, 

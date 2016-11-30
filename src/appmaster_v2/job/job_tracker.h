@@ -44,7 +44,8 @@ public:
     void Run(boost::shared_ptr<baidu::common::ThreadPool> running_pool);
 
     baidu::galaxy::util::ErrorCode Update(const baidu::galaxy::proto::JobDescription& desc,
-            int breakpoint);
+            int breakpoint,
+            bool res_changed);
     baidu::galaxy::util::ErrorCode ContinueUpdating(int breakpoint);
     baidu::galaxy::util::ErrorCode PauseUpdating();
     baidu::galaxy::util::ErrorCode RollbackUpdating();
@@ -90,9 +91,9 @@ private:
 
     JobVersion version_;
     JobVersion last_version_;
-
     baidu::galaxy::proto::JobStatus status_;
-    //baidu::galaxy::proto:JobStatus expect_status_;
+    proto::UpdateAction update_action_;
+    int breakpoint_;
 
     std::list<boost::shared_ptr<RuntimePod> > runtime_pods_;
     std::map<PodId, boost::shared_ptr<RuntimePod> > runtime_pods_index_;

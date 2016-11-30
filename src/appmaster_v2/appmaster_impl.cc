@@ -193,6 +193,7 @@ void AppMasterImpl::UpdateContainerGroupCallBack(int breakpoint,
     baidu::galaxy::util::ErrorCode ec = job_manager_->UpdateJob(request->id(), 
                 job_desc, 
                 breakpoint,
+                container_change,
                 update_response->mutable_error_code());
 
     if (ec.Code() != 0) {
@@ -385,7 +386,7 @@ void AppMasterImpl::UpdateJob(::google::protobuf::RpcController* controller,
     }
 
    
-    uint32_t update_break_count = 0;
+    uint32_t update_break_count = 999999;
     if (request->has_update_break_count()) {
         update_break_count = request->update_break_count();
     }

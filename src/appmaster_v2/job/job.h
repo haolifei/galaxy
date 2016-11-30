@@ -206,6 +206,12 @@ private:
     int64_t updating_time_; // the first time expect_version_ equal version
     int64_t heartbeat_time_; // update when receive heart beat request
 };
+
+bool IsDeployDiff(const proto::JobDescription& desc1, const proto::JobDescription& desc2);
+bool IsExePackageDiff(const proto::JobDescription& desc1, const proto::JobDescription& desc2);
+bool IsDataPackageDiff(const proto::JobDescription& desc1, const proto::JobDescription& desc2);
+bool IsServiceDiff(const proto::JobDescription& desc1, const proto::JobDescription& desc2);
+
 }
 }
 }
