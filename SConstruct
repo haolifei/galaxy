@@ -62,8 +62,8 @@ env.Program('gprobe', probe_src)
 get_service_from_nexus_src = ['src/tools/meta_probe/get_service_from_nexus.cc', 'src/protocol/galaxy.pb.cc', 'src/protocol/appmaster.pb.cc']
 env.Program('get_service_from_nexus', get_service_from_nexus_src)
 
-get_user_meta_from_nexus_src = ['src/tools/meta_probe/get_user_meta_from_nexus.cc', 'src/protocol/galaxy.pb.cc']
-env.Program('get_user_meta_from_nexus', get_user_meta_from_nexus_src)
+#get_user_meta_from_nexus_src = ['src/tools/meta_probe/get_user_meta_from_nexus.cc', 'src/protocol/galaxy.pb.cc']
+#env.Program('get_user_meta_from_nexus', get_user_meta_from_nexus_src)
 
 container_meta_src = ['src/example/container_meta.cc','src/protocol/galaxy.pb.cc', 'src/agent/container/serializer.cc', 'src/agent/util/dict_file.cc']
 env.Program('container_meta', container_meta_src)
@@ -93,4 +93,3 @@ env.Program('test_filesystem', ['src/example/test_boost_filesystem.cc'])
 env.Program('test_appworker_utils', ['src/example/test_appworker_utils.cc', 'src/appworker/utils.cc'])
 
 env.Program('test_volum_collector', ['src/example/test_volum_collector.cc', 'src/agent/volum/volum_collector.cc', 'src/agent/agent_flags.cc'])
-
