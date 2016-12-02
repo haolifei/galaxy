@@ -60,12 +60,13 @@ void AppMasterImpl::SubmitJob(::google::protobuf::RpcController* controller,
                ::google::protobuf::Closure* done) {
 
     VLOG(10) << "submit job " << request->DebugString();
+
     LOG(INFO) << "recv submit job request from :" << request->hostname() 
         << " owner is: " << request->user().user();
 
     if (!running_) {
         response->mutable_error_code()->set_status(proto::kError);
-        response->mutable_error_code()->set_reason("AM is starting ...");
+        response->mutable_error_code()->set_reason("AM is not ready");
         done->Run();
         return;
     }
@@ -135,13 +136,25 @@ void AppMasterImpl::CreateContainerGroupCallBack(proto::JobDescription job_desc,
 }
 
 void AppMasterImpl::BuildContainerDescription(const ::proto::JobDescription& job_desc,
-                                              ::proto::ContainerDescription* container_desc) {
+            ::proto::ContainerDescription* container_desc) {
+
     container_desc->set_priority(job_desc.priority());
     container_desc->set_run_user(job_desc.run_user());
     container_desc->set_version(job_desc.version());
     container_desc->set_max_per_host(job_desc.deploy().max_per_host());
     container_desc->set_tag(job_desc.deploy().tag());
-    container_desc->set_cmd_line(FLAGS_appworker_cmdline);
+    LOG(INFO) << job_desc.DebugString();
+    if (job_desc.has_v2_support() && job_desc.v2_support()) {
+        container_desc->set_v2_support(job_desc.v2_support());
+        std::string start_cmd = std::string("appworker_v2 --nexus_addr=") + 
+            FLAGS_nexus_addr + std::string(" --nexus_root_path=") + FLAGS_nexus_root; 
+        container_desc->set_cmd_line(start_cmd);
+    } else {
+        std::string start_cmd = std::string("appworker --nexus_addr=") + 
+            FLAGS_nexus_addr + std::string(" --nexus_root_path=") + FLAGS_nexus_root;
+        container_desc->set_cmd_line(start_cmd);
+    }
+    LOG(INFO) << __FUNCTION__ << " set cmd " << container_desc->cmd_line();
     for (int i = 0; i < job_desc.deploy().pools_size(); i++) {
         container_desc->add_pool_names(job_desc.deploy().pools(i));
     }
@@ -162,6 +175,7 @@ void AppMasterImpl::BuildContainerDescription(const ::proto::JobDescription& job
             cgroup->add_ports()->CopyFrom(job_desc.pod().tasks(i).ports(j));
         }
     }
+   
     VLOG(10) << "BuildContainerDescription: " << job_desc.name() <<  container_desc->DebugString();
     return;
 }
@@ -221,10 +235,13 @@ void AppMasterImpl::RollbackContainerGroupCallBack(proto::UpdateJobResponse* rol
         return;
     }
 
-    baidu::galaxy::util::ErrorCode ec = job_manager_->RollbackUpdating(request->id(),
-                rollback_response->mutable_error_code());
+
+    rollback_response->mutable_error_code()->set_status(proto::kOk);
+    baidu::galaxy::util::ErrorCode ec = job_manager_->RollbackUpdating(request->id());
 
     if (ec.Code() != 0) {
+        rollback_response->mutable_error_code()->set_status(proto::kOk);
+        rollback_response->mutable_error_code()->set_reason(ec.Message());
         LOG(WARNING) << request->id() << " rollback failed in am: " << ec.Message();
         VLOG(10) << rollback_response->DebugString();
         done->Run();
@@ -249,6 +266,8 @@ void AppMasterImpl::RemoveContainerGroupCallBack(::proto::RemoveJobResponse* rem
     boost::scoped_ptr<const proto::RemoveContainerGroupRequest> request_ptr(request);
     boost::scoped_ptr<proto::RemoveContainerGroupResponse> response_ptr(response);
 
+    response->mutable_error_code()->set_status(proto::kOk);
+
     if (failed || (response_ptr->error_code().status() != proto::kOk && 
         response_ptr->error_code().status() != proto::kJobNotFound)) {
         LOG(WARNING) << "fail to remove container group";
@@ -259,8 +278,10 @@ void AppMasterImpl::RemoveContainerGroupCallBack(::proto::RemoveJobResponse* rem
     }
     LOG(INFO) << "remove job " << request->id() << " by RM successfully";
 
-    baidu::galaxy::util::ErrorCode ec = job_manager_->RemoveJob(request->id(), response);
+    baidu::galaxy::util::ErrorCode ec = job_manager_->RemoveJob(request->id());
     if (ec.Code() != 0) {
+        response->mutable_error_code()->set_status(proto::kError);
+        response->mutable_error_code()->set_reason(ec.Message());
         LOG(WARNING) << "remove job " << request->id() << " failed: " << ec.Message();
     }
     done->Run();
@@ -387,9 +408,6 @@ void AppMasterImpl::UpdateJob(::google::protobuf::RpcController* controller,
 
    
     uint32_t update_break_count = 999999;
-    if (request->has_update_break_count()) {
-        update_break_count = request->update_break_count();
-    }
     const proto::JobDescription& job_desc = request->job();
 
     if (request->has_operate() && request->operate() == proto::kUpdateJobContinue) {
@@ -400,21 +418,27 @@ void AppMasterImpl::UpdateJob(::google::protobuf::RpcController* controller,
 
             response->mutable_error_code()->set_status(proto::kError);
             response->mutable_error_code()->set_reason("status conflict");
+            done->Run();
             return;
         }
 
+        if (request->has_update_break_count()) {
+            update_break_count = request->update_break_count();
+        }
 
         LOG(INFO) << "continue updating job " << request->jobid() 
             << " with breakpoint " << update_break_count;
 
         ec = job_manager_->UpdateContinue(request->jobid(), 
-                    update_break_count,
-                    response->mutable_error_code());
+                    update_break_count);
 
+        response->mutable_error_code()->set_status(proto::kOk);
         if (ec.Code() != 0) {
             LOG(WARNING) << "update failed :" << ec.Message() 
                 << " update request is: " << request->DebugString();
-        }
+            response->mutable_error_code()->set_status(proto::kError);
+            response->mutable_error_code()->set_reason(ec.Message());
+        } 
         done->Run();
 
     } else if (request->has_operate() && request->operate() == proto::kUpdateJobRollback) {
@@ -424,12 +448,13 @@ void AppMasterImpl::UpdateJob(::google::protobuf::RpcController* controller,
                 << ec.Message();;
             response->mutable_error_code()->set_status(proto::kError);
             response->mutable_error_code()->set_reason("status conflict");
+            done->Run();
             return;
         }
 
         LOG(INFO) << "rollback job " << request->jobid();
 
-        proto::JobDescription last_desc; //job_manager_.GetLastDesc(request->jobid());
+        proto::JobDescription last_desc;// = job_manager_->LastDesc(request->jobid());
         if (!last_desc.has_name()) {
             response->mutable_error_code()->set_status(proto::kError);
             response->mutable_error_code()->set_reason("last description not fount");
@@ -476,8 +501,7 @@ void AppMasterImpl::UpdateJob(::google::protobuf::RpcController* controller,
 
         LOG(INFO) << "pause updating :" << request->jobid();
 
-        ec = job_manager_->PauseUpdating(request->jobid(), 
-                    response->mutable_error_code());
+        ec = job_manager_->PauseUpdating(request->jobid());
 
         if (ec.Code() != 0) {
             LOG(WARNING) << request->jobid() << " pause updating failed: " << ec.Message();
@@ -487,6 +511,9 @@ void AppMasterImpl::UpdateJob(::google::protobuf::RpcController* controller,
         }
         done->Run();
     } else {
+        if (request->has_job() && request->job().deploy().has_update_break_count()) {
+            update_break_count = request->job().deploy().update_break_count();
+        }
 
         baidu::galaxy::util::ErrorCode ec = job_manager_->CheckAction(request->jobid(), proto::kUpdate);
         if (ec.Code() != 0) {
@@ -494,6 +521,7 @@ void AppMasterImpl::UpdateJob(::google::protobuf::RpcController* controller,
                 << ec.Message();;
             response->mutable_error_code()->set_status(proto::kError);
             response->mutable_error_code()->set_reason("status conflict");
+            done->Run();
             return;
         }
 

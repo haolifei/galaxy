@@ -67,11 +67,16 @@ public:
     const JobId& Id();
     const proto::JobStatus Status();
     const proto::JobDescription& Description();
+
+    bool LastDescriptionCopy(proto::JobDescription& desc);
+    bool DescriptionCopy(proto::JobDescription& desc);
+
     void GetCounter(Counter& cnt);
     JobVersion Version();
     JobVersion LastVersion();
     void PodInfo(::google::protobuf::RepeatedPtrField<proto::PodInfo >* pods);
     size_t PodSize();
+    const std::string DebugString();
 
 private:
     baidu::galaxy::util::ErrorCode CheckJobDescription(const baidu::galaxy::proto::JobDescription& desc);
@@ -84,6 +89,8 @@ private:
 
     void CheckDeadPodLoop(int32_t interval);
     void CheckDeployLoop(int32_t interval);
+
+    void ChangeStatusTo(proto::JobStatus status, const std::string& f, const int line);
 
     const JobId id_;
     boost::shared_ptr<baidu::galaxy::proto::JobDescription> desc_;

@@ -94,20 +94,15 @@ public:
             proto::ErrorCode* pec);
 
     baidu::galaxy::util::ErrorCode UpdateContinue(const JobId& id, 
-                int breakpoint,
-                proto::ErrorCode* pec);
+                int breakpoint);
 
-    baidu::galaxy::util::ErrorCode PauseUpdating(const JobId& id,
-                proto::ErrorCode* pec);
+    baidu::galaxy::util::ErrorCode PauseUpdating(const JobId& id);
 
-    baidu::galaxy::util::ErrorCode RollbackUpdating(const JobId& id,
-                proto::ErrorCode* pec);
+    baidu::galaxy::util::ErrorCode RollbackUpdating(const JobId& id);
 
-    baidu::galaxy::util::ErrorCode CancelUpdating(const JobId& id,
-                proto::ErrorCode* pec);
+    baidu::galaxy::util::ErrorCode CancelUpdating(const JobId& id);
 
-    baidu::galaxy::util::ErrorCode RemoveJob(const JobId& id, 
-            proto::RemoveContainerGroupResponse* response);
+    baidu::galaxy::util::ErrorCode RemoveJob(const JobId& id);
  
     baidu::galaxy::util::ErrorCode HandleFetch(const baidu::galaxy::proto::FetchTaskRequest& req,
             baidu::galaxy::proto::FetchTaskResponse& response);
@@ -116,6 +111,8 @@ public:
     baidu::galaxy::util::ErrorCode ShowJob(const JobId& id, proto::ShowJobResponse* response);
 
     baidu::galaxy::util::ErrorCode CheckAction(const JobId& id, proto::JobEvent);
+
+    boost::shared_ptr<RuntimeJob> Job(const JobId& id);
 private:
     void FinishedJobCheckLoop(int interval);
     void BuildAllowAction();
