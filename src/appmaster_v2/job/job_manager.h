@@ -112,15 +112,23 @@ public:
 
     baidu::galaxy::util::ErrorCode CheckAction(const JobId& id, proto::JobEvent);
 
+    // check service is used or not
+    baidu::galaxy::util::ErrorCode CheckService(const std::string& service);
+
     boost::shared_ptr<RuntimeJob> Job(const JobId& id);
+
 private:
     void FinishedJobCheckLoop(int interval);
+    void SynServiceLoop(int interval);
+
     void BuildAllowAction();
 
     std::map<JobId, boost::shared_ptr<RuntimeJob> > rt_jobs_;
     boost::mutex mutex_;
     boost::shared_ptr<baidu::common::ThreadPool> job_tracker_threadpool_;
     JobActionChecker jobaction_checker_;
+
+    // service
 };
 }
 }

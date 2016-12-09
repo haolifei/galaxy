@@ -374,7 +374,7 @@ void AppMasterImpl::FetchTask(::google::protobuf::RpcController* controller,
                               const ::proto::FetchTaskRequest* request,
                               ::proto::FetchTaskResponse* response,
                               ::google::protobuf::Closure* done) {
-    VLOG(10) << "DEBUG: FetchTask" << request->DebugString();
+    VLOG(16) << "DEBUG: FetchTask" << request->DebugString();
     baidu::galaxy::util::ErrorCode ec = job_manager_->HandleFetch(*request, *response);
 
     proto::Status status = (proto::Status)ec.Code();
@@ -383,7 +383,7 @@ void AppMasterImpl::FetchTask(::google::protobuf::RpcController* controller,
             << ", " << ec.Message();
     }
 
-    VLOG(10) << "DEBUG: Fetch response " << response->DebugString();
+    VLOG(16) << "DEBUG: Fetch response " << response->DebugString();
     done->Run();
     return;
 }
@@ -425,6 +425,8 @@ void AppMasterImpl::UpdateJob(::google::protobuf::RpcController* controller,
         if (request->has_update_break_count()) {
             update_break_count = request->update_break_count();
         }
+
+        VLOG(16) << request->DebugString();
 
         LOG(INFO) << "continue updating job " << request->jobid() 
             << " with breakpoint " << update_break_count;

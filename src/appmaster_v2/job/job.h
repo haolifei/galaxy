@@ -145,6 +145,7 @@ public:
         return this;
     }
 
+    // FIXME: podinfo_ will be modified in multi-thread
     const baidu::galaxy::proto::FetchTaskRequest& PodInfo() {
         boost::mutex::scoped_lock lock(mutex_);
         return podinfo_;

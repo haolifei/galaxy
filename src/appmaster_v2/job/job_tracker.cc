@@ -5,6 +5,7 @@
 #include "job_tracker.h"
 #include "timer.h"
 #include "protocol/appmaster.pb.h"
+#include "protocol/galaxy.pb.h"
 #include "glog/logging.h"
 #include "gflags/gflags.h"
 #include <boost/bind.hpp>
@@ -512,6 +513,42 @@ void JobTracker::ChangeStatusTo(proto::JobStatus status, const std::string& f, c
         << " at " << f << ":" << line;
     status_ = status;
 }
+
+
+void JobTracker::ListServices(std::map<std::string, proto::Service>& services) {
+    boost::mutex::scoped_lock lock(mutex_);
+    const proto::PodDescription& pod = desc_->pod();
+    for (int i = 0; i < pod.tasks_size(); i++) {
+        const proto::TaskDescription& t = pod.tasks(i);
+        for (int j = 0; j < t.services_size(); j++) {
+            if (t.services(j).has_use_bns() && t.services(j).use_bns()) {
+                services[t.services(j).service_name()] = t.services(j);
+            }
+        }
+    }
+}
+
+baidu::galaxy::util::ErrorCode JobTracker::ListServiceInfo(const std::string& service_name, 
+            std::vector<proto::ServiceInfo>& info) {
+    boost::mutex::scoped_lock lock(mutex_);
+    if (status_ == proto::kJobFinished
+                || status_ == proto::kJobDestroying) {
+        return ERRORCODE(-1, "job status is %s", proto::JobStatus_Name(status_).c_str());
+    }
+
+    std::list<boost::shared_ptr<RuntimePod> >::iterator iter = runtime_pods_.begin();
+    while(iter != runtime_pods_.end()) {
+        const proto::FetchTaskRequest podinfo = (*iter)->PodInfo();
+        for (int i = 0; i < podinfo.services_size(); i++) {
+            if (podinfo.services(i).name() == service_name) {
+                info.push_back(podinfo.services(i));
+            }
+        }
+        iter++;
+    }
+    return ERRORCODE_OK;
+}
+
 
 }
 }

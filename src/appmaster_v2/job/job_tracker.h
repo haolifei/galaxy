@@ -60,6 +60,9 @@ public:
     baidu::galaxy::util::ErrorCode HandleFetch(const baidu::galaxy::proto::FetchTaskRequest& request,
             baidu::galaxy::proto::FetchTaskResponse& response);
 
+    void ListServices(std::map<std::string, proto::Service>& services);
+    baidu::galaxy::util::ErrorCode ListServiceInfo(const std::string& service_name, std::vector<proto::ServiceInfo>& info);
+
     void Destroy();
     void TearDown();
 

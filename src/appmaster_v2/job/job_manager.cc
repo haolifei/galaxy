@@ -39,6 +39,11 @@ baidu::galaxy::util::ErrorCode JobManager::Setup() {
     return ERRORCODE_OK;
 }
 
+
+void JobManager::SynServiceLoop(int interval) {
+    // donot realize
+}
+
 baidu::galaxy::util::ErrorCode JobManager::Submit(
         const JobId& id,
         const baidu::galaxy::proto::JobDescription& desc,
@@ -246,6 +251,11 @@ boost::shared_ptr<RuntimeJob> JobManager::Job(const JobId& id) {
         return boost::shared_ptr<RuntimeJob>();
     }
     return iter->second;
+}
+
+
+baidu::galaxy::util::ErrorCode JobManager::CheckService(const std::string& service) {
+    return ERRORCODE(-1, "not realized");
 }
 
 }

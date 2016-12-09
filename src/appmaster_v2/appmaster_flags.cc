@@ -23,6 +23,9 @@ DEFINE_int32(master_fail_last_threshold, 3600, "master pod fail status lasts tim
 DEFINE_int32(safe_interval, 20, "master safe mode interval");
 DEFINE_int32(deploying_pod_timeout, 60, "deploy timeout in sec");
 
+DEFINE_string(add_bnsinstance_url, "", "");
+DEFINE_string(del_bnsinstance_url, "", "");
+
 
 #define CHECK_EMPTY(flag) do {\
     if (FLAGS_##flag.empty()) { \
