@@ -29,11 +29,8 @@ JobManager::~JobManager() {
 
 baidu::galaxy::util::ErrorCode JobManager::Setup() {
     // 1 Load meta from nexus
-
     // 2 setup job action checker
     jobaction_checker_.Setup();
-
-
     // 3 start loop
     FinishedJobCheckLoop(FLAGS_appmaster_check_finishedjob_interval);
     return ERRORCODE_OK;
@@ -51,9 +48,8 @@ baidu::galaxy::util::ErrorCode JobManager::Submit(
     // create job tracker
     boost::shared_ptr<RuntimeJob> jobinfo(new RuntimeJob(id, desc));
     jobinfo->update_modify_time()
-        ->update_owner(user)
-        ->update_create_time();
-
+    ->update_owner(user)
+    ->update_create_time();
     boost::mutex::scoped_lock lock(mutex_);
     rt_jobs_[id] = jobinfo;
     jobinfo->job_tracker()->Run(job_tracker_threadpool_);
@@ -78,9 +74,8 @@ baidu::galaxy::util::ErrorCode JobManager::HandleFetch(const baidu::galaxy::prot
 }
 
 
-baidu::galaxy::util::ErrorCode JobManager::UpdateContinue(const JobId& id, 
-            int breakpoint) {
-
+baidu::galaxy::util::ErrorCode JobManager::UpdateContinue(const JobId& id,
+        int breakpoint) {
     boost::mutex::scoped_lock lock(mutex_);
     std::map<JobId, boost::shared_ptr<RuntimeJob> >::const_iterator iter
         = rt_jobs_.find(id);
@@ -121,6 +116,7 @@ baidu::galaxy::util::ErrorCode JobManager::UpdateJob(const JobId& id,
             pec->set_reason("job not found");
             return ERRORCODE(-1, "job %s donot exist", id.c_str());
         }
+
         rt_job = iter->second;
     }
     return rt_job->job_tracker()->Update(desc, breakpoint, res_changed);
@@ -134,11 +130,10 @@ baidu::galaxy::util::ErrorCode JobManager::RemoveJob(const JobId& id) {
     if (iter == rt_jobs_.end()) {
         return ERRORCODE(0, "job %s donot exist", id.c_str());
     }
-    iter->second->job_tracker()->Destroy();
 
+    iter->second->job_tracker()->Destroy();
     // FIXME: write to nexus when job'status changed
     //baidu::galaxy::nexus::NexusProxy::GetInstance()->Put();
-
     return ERRORCODE_OK;
 }
 
@@ -147,13 +142,12 @@ void JobManager::ListJobs(proto::ListJobsResponse* response) {
     assert(NULL != response);
     boost::mutex::scoped_lock lock(mutex_);
     std::map<JobId, boost::shared_ptr<RuntimeJob> >::iterator iter = rt_jobs_.begin();
-    while (iter != rt_jobs_.end()) {
 
+    while (iter != rt_jobs_.end()) {
         proto::JobOverview* jo = response->mutable_jobs()->Add();
         boost::shared_ptr<JobTracker> jt = iter->second->job_tracker();
         JobTracker::Counter cnt;
         jt->GetCounter(cnt);
-
         jo->set_jobid(jt->Id());
         jo->mutable_desc()->CopyFrom(jt->Description());
         jo->set_status(jt->Status());
@@ -175,7 +169,6 @@ void JobManager::ListJobs(proto::ListJobsResponse* response) {
 baidu::galaxy::util::ErrorCode JobManager::ShowJob(const JobId& id, proto::ShowJobResponse* response) {
     assert(NULL != response);
     boost::mutex::scoped_lock lock(mutex_);
-
     std::map<JobId, boost::shared_ptr<RuntimeJob> >::iterator iter
         = rt_jobs_.find(id);
 
@@ -185,9 +178,7 @@ baidu::galaxy::util::ErrorCode JobManager::ShowJob(const JobId& id, proto::ShowJ
         return ERRORCODE(-1, "job donot exist: %s", id.c_str());
     }
 
-
     boost::shared_ptr<JobTracker> jt = iter->second->job_tracker();
-
     proto::JobInfo* job = response->mutable_job();
     job->set_jobid(jt->Id());
     job->mutable_desc()->CopyFrom(jt->Description());
@@ -200,10 +191,8 @@ baidu::galaxy::util::ErrorCode JobManager::ShowJob(const JobId& id, proto::ShowJ
     //job->set_action();
     //job->set_last_version();
     job->set_rollback_time(jt->LastVersion());
-
     jt->PodInfo(job->mutable_pods());
     response->mutable_error_code()->set_status(proto::kOk);
-
     return ERRORCODE_OK;
 }
 
@@ -213,43 +202,50 @@ void JobManager::FinishedJobCheckLoop(int interval) {
 
     while (iter != rt_jobs_.end()) {
         boost::shared_ptr<JobTracker> jt = iter->second->job_tracker();
+
         if (jt->Status() == proto::kJobDestroying
-                    && jt->PodSize() == 0) {
+                && jt->PodSize() == 0) {
             LOG(INFO) << "job " << iter->first << " is finished";
             jt->TearDown();
             rt_jobs_.erase(iter++);
             continue;
         }
+
         iter++;
     }
-    job_tracker_threadpool_->DelayTask(interval * 1000, 
-                boost::bind(&JobManager::FinishedJobCheckLoop, this, interval));
 
+    job_tracker_threadpool_->DelayTask(interval * 1000,
+            boost::bind(&JobManager::FinishedJobCheckLoop, this, interval));
 }
 
 baidu::galaxy::util::ErrorCode JobManager::CheckAction(const JobId& id, proto::JobEvent action) {
     boost::mutex::scoped_lock lock(mutex_);
     std::map<JobId, boost::shared_ptr<RuntimeJob> >::iterator iter = rt_jobs_.find(id);
+
     if (iter == rt_jobs_.end()) {
         return ERRORCODE(-1, "job donot exist");
     }
 
     proto::JobStatus status = iter->second->job_tracker()->Status();
     baidu::galaxy::util::ErrorCode ec = jobaction_checker_.CheckAction(status, action);
+
     if (ec.Code() != 0) {
         LOG(WARNING) << id << " status conflict: " << ec.Message();
         return ERRORCODE(-1, "check action failed: %s", ec.Message().c_str());
     }
+
     return ERRORCODE_OK;
 }
 
 
 boost::shared_ptr<RuntimeJob> JobManager::Job(const JobId& id) {
- boost::mutex::scoped_lock lock(mutex_);
+    boost::mutex::scoped_lock lock(mutex_);
     std::map<JobId, boost::shared_ptr<RuntimeJob> >::iterator iter = rt_jobs_.find(id);
+
     if (iter == rt_jobs_.end()) {
         return boost::shared_ptr<RuntimeJob>();
     }
+
     return iter->second;
 }
 

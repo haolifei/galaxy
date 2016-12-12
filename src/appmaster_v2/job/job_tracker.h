@@ -17,25 +17,25 @@ namespace galaxy {
 namespace am {
 
 class JobTracker {
+public:
+    class Counter {
     public:
-        class Counter {
-            public:
-                int pending_num;
-                int death_num;
-                int failed_num;
-                int running_num;
-                int finished_updating_num;
-                int deploying_num;
+        int pending_num;
+        int death_num;
+        int failed_num;
+        int running_num;
+        int finished_updating_num;
+        int deploying_num;
 
-            public:
-                Counter() :
-                    pending_num(0),
-                    death_num(0),
-                    failed_num(0),
-                    running_num(0),
-                    finished_updating_num(0),
-                    deploying_num(0) {}
-        };
+    public:
+        Counter() :
+            pending_num(0),
+            death_num(0),
+            failed_num(0),
+            running_num(0),
+            finished_updating_num(0),
+            deploying_num(0) {}
+    };
 
 public:
     JobTracker(const JobId& jobid, const baidu::galaxy::proto::JobDescription& desc);

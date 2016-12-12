@@ -93,8 +93,8 @@ public:
             bool res_changed,
             proto::ErrorCode* pec);
 
-    baidu::galaxy::util::ErrorCode UpdateContinue(const JobId& id, 
-                int breakpoint);
+    baidu::galaxy::util::ErrorCode UpdateContinue(const JobId& id,
+            int breakpoint);
 
     baidu::galaxy::util::ErrorCode PauseUpdating(const JobId& id);
 
@@ -103,7 +103,7 @@ public:
     baidu::galaxy::util::ErrorCode CancelUpdating(const JobId& id);
 
     baidu::galaxy::util::ErrorCode RemoveJob(const JobId& id);
- 
+
     baidu::galaxy::util::ErrorCode HandleFetch(const baidu::galaxy::proto::FetchTaskRequest& req,
             baidu::galaxy::proto::FetchTaskResponse& response);
 

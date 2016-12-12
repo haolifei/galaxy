@@ -27,73 +27,73 @@ public:
     //void Init();
     baidu::galaxy::util::ErrorCode Setup();
     void SubmitJob(::google::protobuf::RpcController* controller,
-                  const ::baidu::galaxy::proto::SubmitJobRequest* request,
-                  ::baidu::galaxy::proto::SubmitJobResponse* response,
-                  ::google::protobuf::Closure* done);
+            const ::baidu::galaxy::proto::SubmitJobRequest* request,
+            ::baidu::galaxy::proto::SubmitJobResponse* response,
+            ::google::protobuf::Closure* done);
 
     void UpdateJob(::google::protobuf::RpcController* controller,
-                  const ::baidu::galaxy::proto::UpdateJobRequest* request,
-                  ::baidu::galaxy::proto::UpdateJobResponse* response,
-                  ::google::protobuf::Closure* done);
+            const ::baidu::galaxy::proto::UpdateJobRequest* request,
+            ::baidu::galaxy::proto::UpdateJobResponse* response,
+            ::google::protobuf::Closure* done);
 
     void RemoveJob(::google::protobuf::RpcController* controller,
-                  const ::baidu::galaxy::proto::RemoveJobRequest* request,
-                  ::baidu::galaxy::proto::RemoveJobResponse* response,
-                  ::google::protobuf::Closure* done);
+            const ::baidu::galaxy::proto::RemoveJobRequest* request,
+            ::baidu::galaxy::proto::RemoveJobResponse* response,
+            ::google::protobuf::Closure* done);
 
     void ListJobs(::google::protobuf::RpcController* controller,
-                  const ::baidu::galaxy::proto::ListJobsRequest* request,
-                  ::baidu::galaxy::proto::ListJobsResponse* response,
-                  ::google::protobuf::Closure* done);
+            const ::baidu::galaxy::proto::ListJobsRequest* request,
+            ::baidu::galaxy::proto::ListJobsResponse* response,
+            ::google::protobuf::Closure* done);
 
     void ShowJob(::google::protobuf::RpcController* controller,
-                  const ::baidu::galaxy::proto::ShowJobRequest* request,
-                  ::baidu::galaxy::proto::ShowJobResponse* response,
-                  ::google::protobuf::Closure* done);
+            const ::baidu::galaxy::proto::ShowJobRequest* request,
+            ::baidu::galaxy::proto::ShowJobResponse* response,
+            ::google::protobuf::Closure* done);
 
     void ExecuteCmd(::google::protobuf::RpcController* controller,
-                   const ::baidu::galaxy::proto::ExecuteCmdRequest* request,
-                   ::baidu::galaxy::proto::ExecuteCmdResponse* response,
-                   ::google::protobuf::Closure* done) {}
+            const ::baidu::galaxy::proto::ExecuteCmdRequest* request,
+            ::baidu::galaxy::proto::ExecuteCmdResponse* response,
+            ::google::protobuf::Closure* done) {}
 
     void FetchTask(::google::protobuf::RpcController* controller,
-                  const ::baidu::galaxy::proto::FetchTaskRequest* request,
-                  ::baidu::galaxy::proto::FetchTaskResponse* response,
-                  ::google::protobuf::Closure* done);
+            const ::baidu::galaxy::proto::FetchTaskRequest* request,
+            ::baidu::galaxy::proto::FetchTaskResponse* response,
+            ::google::protobuf::Closure* done);
 
     void RecoverInstance(::google::protobuf::RpcController* controller,
-                        const ::baidu::galaxy::proto::RecoverInstanceRequest* request,
-                        ::baidu::galaxy::proto::RecoverInstanceResponse* response,
-                        ::google::protobuf::Closure* done) {}
+            const ::baidu::galaxy::proto::RecoverInstanceRequest* request,
+            ::baidu::galaxy::proto::RecoverInstanceResponse* response,
+            ::google::protobuf::Closure* done) {}
 
 private:
     void BuildContainerDescription(const proto::JobDescription& job_desc,
-                                  ::baidu::galaxy::proto::ContainerDescription* container_desc);
+            ::baidu::galaxy::proto::ContainerDescription* container_desc);
     void CreateContainerGroupCallBack(proto::JobDescription job_desc,
-                                       proto::SubmitJobResponse* submit_response,
-                                       ::google::protobuf::Closure* done,
-                                       const proto::CreateContainerGroupRequest* request,
-                                       proto::CreateContainerGroupResponse* response,
-                                       bool failed, int err) ;
-    void UpdateContainerGroupCallBack(int breakpoint, 
-                                    proto::JobDescription job_desc, 
-                                     proto::UpdateJobResponse* update_response,
-                                     ::google::protobuf::Closure* done,
-                                     const proto::UpdateContainerGroupRequest* request,
-                                     proto::UpdateContainerGroupResponse* response,
-                                     bool failed, int err);
+            proto::SubmitJobResponse* submit_response,
+            ::google::protobuf::Closure* done,
+            const proto::CreateContainerGroupRequest* request,
+            proto::CreateContainerGroupResponse* response,
+            bool failed, int err) ;
+    void UpdateContainerGroupCallBack(int breakpoint,
+            proto::JobDescription job_desc,
+            proto::UpdateJobResponse* update_response,
+            ::google::protobuf::Closure* done,
+            const proto::UpdateContainerGroupRequest* request,
+            proto::UpdateContainerGroupResponse* response,
+            bool failed, int err);
     void RollbackContainerGroupCallBack(proto::UpdateJobResponse* rollback_response,
-                                 ::google::protobuf::Closure* done,
-                                 const proto::UpdateContainerGroupRequest* request,
-                                 proto::UpdateContainerGroupResponse* response,
-                                 bool failed, 
-                                 int err);
+            ::google::protobuf::Closure* done,
+            const proto::UpdateContainerGroupRequest* request,
+            proto::UpdateContainerGroupResponse* response,
+            bool failed,
+            int err);
 
     void RemoveContainerGroupCallBack(::baidu::galaxy::proto::RemoveJobResponse* remove_response,
-                                      ::google::protobuf::Closure* done,
-                                      const proto::RemoveContainerGroupRequest* request,
-                                      proto::RemoveContainerGroupResponse* response,
-                                      bool failed, int);
+            ::google::protobuf::Closure* done,
+            const proto::RemoveContainerGroupRequest* request,
+            proto::RemoveContainerGroupResponse* response,
+            bool failed, int);
     /*void HandleResmanChange(const std::string& new_endpoint);
     void OnLockChange(std::string lock_session_id);
     void ReloadAppInfo();

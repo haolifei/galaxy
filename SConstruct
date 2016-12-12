@@ -28,6 +28,8 @@ env.Program('appmaster_v2', Glob('src/appmaster_v2/job/*.cc')
     + Glob('src/appmaster_v2/nexus/*.cc')
     + Glob('src/appmaster_v2/naming/*.cc'))
 
+
+
 env.Program('appworker', Glob('src/appworker/*.cc') + Glob('src/utils/*.cc')
             + ['src/protocol/galaxy.pb.cc', 'src/protocol/appmaster.pb.cc', 'src/protocol/appworker.pb.cc'])
 
@@ -94,3 +96,10 @@ env.Program('test_filesystem', ['src/example/test_boost_filesystem.cc'])
 env.Program('test_appworker_utils', ['src/example/test_appworker_utils.cc', 'src/appworker/utils.cc'])
 
 env.Program('test_volum_collector', ['src/example/test_volum_collector.cc', 'src/agent/volum/volum_collector.cc', 'src/agent/agent_flags.cc'])
+
+env.Program('test_naming', Glob('src/protocol/*.pb.cc')
+    + Glob('src/appmaster_v2/naming/*.cc')
+    + ['src/appmaster_v2/appmaster_flags.cc', 'src/example/test_naming.cc']
+    )
+
+

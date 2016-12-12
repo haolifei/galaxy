@@ -37,7 +37,6 @@ JobTracker::JobTracker(const JobId& jobid, const baidu::galaxy::proto::JobDescri
     running_(false),
     check_dead_thread_(0L),
     check_deploy_thread_(0L) {
-
     desc_->CopyFrom(desc);
 }
 
@@ -48,6 +47,7 @@ JobTracker::~JobTracker() {
 void JobTracker::CheckDeadPodLoop(int32_t interval) {
     // check heartbeat, remove dead pods
     boost::mutex::scoped_lock lock(mutex_);
+
     if (!running_) {
         LOG(INFO) << id_ << "donot run, check dead pod loop will exit";
         return;
@@ -75,7 +75,7 @@ void JobTracker::CheckDeadPodLoop(int32_t interval) {
     }
 
     check_dead_thread_ = running_pool_->DelayTask(interval * 1000,
-        boost::bind(&JobTracker::CheckDeadPodLoop, this, interval));
+                         boost::bind(&JobTracker::CheckDeadPodLoop, this, interval));
 }
 
 
@@ -97,25 +97,26 @@ void JobTracker::CheckDeployLoop(int32_t interval) {
         int32_t need_deploying_cnt = 0;
         int32_t same_version_cnt = 0; // expect version == job version
 
-        
         while (iter != runtime_pods_.end()) {
             VLOG(10) << (*iter)->ToString();
+
             if ((*iter)->PodInDeploying(version_, FLAGS_deploying_pod_timeout)) {
                 deploying_cnt++;
-            } 
-            
+            }
+
             if ((*iter)->PodNeedUpdate(version_)) {
                 need_deploying_cnt++;
             } else {
                 same_version_cnt++;
             }
+
             iter++;
         }
 
-        VLOG(10) << id_<< " counters: " << "need:" << need_deploying_cnt << " "
-            <<"deploying:" <<  deploying_cnt << " "
-            << "same:" << same_version_cnt << " "
-            "breakpoint_"  <<breakpoint_;
+        VLOG(10) << id_ << " counters: " << "need:" << need_deploying_cnt << " "
+                 << "deploying:" <<  deploying_cnt << " "
+                 << "same:" << same_version_cnt << " "
+                 "breakpoint_"  << breakpoint_;
 
         if (need_deploying_cnt > 0
                 && deploying_cnt < (int)desc_->deploy().step()
@@ -123,8 +124,8 @@ void JobTracker::CheckDeployLoop(int32_t interval) {
             iter = runtime_pods_.begin();
             int32_t to_deploy_cnt = (int)desc_->deploy().step() - deploying_cnt;
             to_deploy_cnt = to_deploy_cnt > breakpoint_ - same_version_cnt ?  breakpoint_ - same_version_cnt : to_deploy_cnt;
-
             int real_add_cnt = 0;
+
             while (iter != runtime_pods_.end() && to_deploy_cnt) {
                 if ((*iter)->PodNeedUpdate(version_)) {
                     (*iter)->set_expect_version(version_);
@@ -136,16 +137,16 @@ void JobTracker::CheckDeployLoop(int32_t interval) {
             }
 
             VLOG(10) << id_ << " is in deploying:" << id_ << "deploying_cnt : " << deploying_cnt
-                      << " | need_deploying_cnt: " << need_deploying_cnt
-                      << " | deploy_step: " << desc_->deploy().step()
-                      << " | deploying_cnt: " << deploying_cnt + real_add_cnt
-                      << " | deploying_deta: " << real_add_cnt;
+                     << " | need_deploying_cnt: " << need_deploying_cnt
+                     << " | deploy_step: " << desc_->deploy().step()
+                     << " | deploying_cnt: " << deploying_cnt + real_add_cnt
+                     << " | deploying_deta: " << real_add_cnt;
         }
 
         // change status
-        if (same_version_cnt == (int)runtime_pods_.size() 
-                    && deploying_cnt == 0
-                    && (proto::kJobUpdating == status_)) {
+        if (same_version_cnt == (int)runtime_pods_.size()
+                && deploying_cnt == 0
+                && (proto::kJobUpdating == status_)) {
             CHANGE_STATUS_TO(proto::kJobRunning);
         }
 
@@ -155,7 +156,7 @@ void JobTracker::CheckDeployLoop(int32_t interval) {
     }
 
     check_deploy_thread_ = running_pool_->DelayTask(interval * 1000,
-        boost::bind(&JobTracker::CheckDeployLoop, this, interval));
+                           boost::bind(&JobTracker::CheckDeployLoop, this, interval));
 }
 
 
@@ -185,7 +186,7 @@ baidu::galaxy::util::ErrorCode JobTracker::HandleFetch(
         if (iter->second->PodInfo().start_time() != request.start_time()) {
             if (iter->second->PodInfo().start_time() > request.start_time()) {
                 LOG(WARNING) << request.podid() << ":" << request.start_time()
-                             << ":" << request.endpoint() 
+                             << ":" << request.endpoint()
                              << " is confict with :" << iter->second->PodInfo().start_time()
                              << ": " << iter->second->PodInfo().endpoint()
                              << " and will quit";
@@ -203,7 +204,7 @@ baidu::galaxy::util::ErrorCode JobTracker::HandleFetch(
     if (baidu::galaxy::proto::kJobPending == status_) {
         // process pending pod
         response.mutable_error_code()->set_status(proto::kSuspend);
-        CHANGE_STATUS_TO(proto::kJobRunning); 
+        CHANGE_STATUS_TO(proto::kJobRunning);
     } else if (baidu::galaxy::proto::kJobRunning == status_) {
         if (!rt_pod->PeasNeedUpdate()) {
             switch (request.status()) {
@@ -238,11 +239,8 @@ baidu::galaxy::util::ErrorCode JobTracker::HandleFetch(
         }
     } else if (baidu::galaxy::proto::kJobDestroying == status_
                || baidu::galaxy::proto::kJobFinished == status_) {
-
         response.mutable_error_code()->set_status(baidu::galaxy::proto::kQuit);
-
     } else if (baidu::galaxy::proto::kJobUpdatePause == status_) {
-
     } else if (baidu::galaxy::proto::kJobUpdating == status_) {
         if (!rt_pod->PeasNeedUpdate()) {
             switch (request.status()) {
@@ -289,7 +287,7 @@ void JobTracker::ExportPodDescription(const baidu::galaxy::proto::JobDescription
 baidu::galaxy::util::ErrorCode JobTracker::Update(const baidu::galaxy::proto::JobDescription& desc,
         int breakpoint,
         bool res_changed
-        ) {
+                                        ) {
     // check if need updating or not
     boost::mutex::scoped_lock lock(mutex_);
     breakpoint = breakpoint > (int)desc_->deploy().replica() ? desc_->deploy().replica() : breakpoint;
@@ -300,17 +298,14 @@ baidu::galaxy::util::ErrorCode JobTracker::Update(const baidu::galaxy::proto::Jo
         update_action_ = proto::kActionRecreate;
         last_desc_ = desc_;
         desc_->CopyFrom(desc);
-
         last_version_ = version_;
         version_ = baidu::common::timer::get_micros();
         CHANGE_STATUS_TO(proto::kJobUpdating);
     } else if (IsExePackageDiff(desc, *desc_) || IsDataPackageDiff(desc, *desc_)) {
         update_action_ = proto::kActionRebuild;
         last_desc_ = desc_;
-
         last_version_ = version_;
         version_ = baidu::common::timer::get_micros();
-
         desc_->CopyFrom(desc);
         CHANGE_STATUS_TO(proto::kJobUpdating);
     } else if (IsDeployDiff(desc, *desc_) || IsServiceDiff(desc, *desc_)) {
@@ -320,12 +315,11 @@ baidu::galaxy::util::ErrorCode JobTracker::Update(const baidu::galaxy::proto::Jo
         LOG(INFO) << "nonthing changed, " << id_;
     }
 
-    LOG(INFO) << id_ << " will be updated with params: " 
-        <<  " update_action_: " << proto::UpdateAction_Name(update_action_)
-        << " version: " << version_
-        << " breakpoint: " << breakpoint_
-        << " res_changed: " << res_changed ? "true" : "false";
-
+    LOG(INFO) << id_ << " will be updated with params: "
+              <<  " update_action_: " << proto::UpdateAction_Name(update_action_)
+              << " version: " << version_
+              << " breakpoint: " << breakpoint_
+              << " res_changed: " << res_changed ? "true" : "false";
     return ERRORCODE_OK;
 }
 
@@ -336,9 +330,9 @@ baidu::galaxy::util::ErrorCode JobTracker::ContinueUpdating(int breakpoint) {
 
     if (breakpoint <= breakpoint_) {
         return ERRORCODE(-1, "breakpoint(%d) is le pre-breakpoint(%d)",
-                    breakpoint,
-                    breakpoint_
-                    );
+                breakpoint,
+                breakpoint_
+                                                );
     }
 
     breakpoint_ = breakpoint;
@@ -384,22 +378,26 @@ const JobId& JobTracker::Id() {
 
 const proto::JobDescription& JobTracker::Description() {
     boost::mutex::scoped_lock lock(mutex_);
-    return *desc_; 
+    return *desc_;
 }
 
 bool JobTracker::LastDescriptionCopy(proto::JobDescription& desc) {
     boost::mutex::scoped_lock lock(mutex_);
+
     if (last_desc_.get() == NULL) {
         return false;
     }
+
     desc.CopyFrom(*last_desc_);
     return true;
 }
 bool JobTracker::DescriptionCopy(proto::JobDescription& desc) {
     boost::mutex::scoped_lock lock(mutex_);
+
     if (desc_.get() == NULL) {
         return false;
     }
+
     desc.CopyFrom(*desc_);
     return true;
 }
@@ -439,8 +437,8 @@ void JobTracker::GetCounter(JobTracker::Counter& cnt) {
             finish_updating_num++;
         }
 
-        cnt.pending_num = pending_num 
-            + (desc_->deploy().replica() - runtime_pods_.size());
+        cnt.pending_num = pending_num
+                          + (desc_->deploy().replica() - runtime_pods_.size());
         cnt.failed_num = failed_num;
         cnt.running_num = running_num;
         cnt.deploying_num = deploying_num;
@@ -463,7 +461,8 @@ JobVersion JobTracker::LastVersion() {
 void JobTracker::PodInfo(::google::protobuf::RepeatedPtrField<proto::PodInfo >* pods) {
     boost::mutex::scoped_lock lock(mutex_);
     std::list<boost::shared_ptr<RuntimePod> >::iterator iter = runtime_pods_.begin();
-    while(iter != runtime_pods_.end()) {
+
+    while (iter != runtime_pods_.end()) {
         proto::PodInfo* pi = pods->Add();
         pi->set_podid((*iter)->PodInfo().podid());
         pi->set_jobid((*iter)->PodInfo().jobid());
@@ -474,9 +473,11 @@ void JobTracker::PodInfo(::google::protobuf::RepeatedPtrField<proto::PodInfo >* 
         pi->set_heartbeat_time((*iter)->heartbeat_time());
         pi->set_reload_status((*iter)->PodInfo().reload_status());
         pi->set_start_time((*iter)->PodInfo().start_time());
+
         for (int i = 0; i < (*iter)->PodInfo().services_size(); i++) {
             pi->mutable_services()->Add()->CopyFrom((*iter)->PodInfo().services(i));
         }
+
         iter++;
     }
 }
@@ -509,8 +510,8 @@ const std::string JobTracker::DebugString() {
 
 void JobTracker::ChangeStatusTo(proto::JobStatus status, const std::string& f, const int line) {
     LOG(INFO) << id_ << " change status from " << proto::JobStatus_Name(status_)
-        << " to status " << proto::JobStatus_Name(status) 
-        << " at " << f << ":" << line;
+              << " to status " << proto::JobStatus_Name(status)
+              << " at " << f << ":" << line;
     status_ = status;
 }
 
@@ -518,8 +519,10 @@ void JobTracker::ChangeStatusTo(proto::JobStatus status, const std::string& f, c
 void JobTracker::ListServices(std::map<std::string, proto::Service>& services) {
     boost::mutex::scoped_lock lock(mutex_);
     const proto::PodDescription& pod = desc_->pod();
+
     for (int i = 0; i < pod.tasks_size(); i++) {
         const proto::TaskDescription& t = pod.tasks(i);
+
         for (int j = 0; j < t.services_size(); j++) {
             if (t.services(j).has_use_bns() && t.services(j).use_bns()) {
                 services[t.services(j).service_name()] = t.services(j);
@@ -528,24 +531,29 @@ void JobTracker::ListServices(std::map<std::string, proto::Service>& services) {
     }
 }
 
-baidu::galaxy::util::ErrorCode JobTracker::ListServiceInfo(const std::string& service_name, 
-            std::vector<proto::ServiceInfo>& info) {
+baidu::galaxy::util::ErrorCode JobTracker::ListServiceInfo(const std::string& service_name,
+        std::vector<proto::ServiceInfo>& info) {
     boost::mutex::scoped_lock lock(mutex_);
+
     if (status_ == proto::kJobFinished
-                || status_ == proto::kJobDestroying) {
+            || status_ == proto::kJobDestroying) {
         return ERRORCODE(-1, "job status is %s", proto::JobStatus_Name(status_).c_str());
     }
 
     std::list<boost::shared_ptr<RuntimePod> >::iterator iter = runtime_pods_.begin();
-    while(iter != runtime_pods_.end()) {
+
+    while (iter != runtime_pods_.end()) {
         const proto::FetchTaskRequest podinfo = (*iter)->PodInfo();
+
         for (int i = 0; i < podinfo.services_size(); i++) {
             if (podinfo.services(i).name() == service_name) {
                 info.push_back(podinfo.services(i));
             }
         }
+
         iter++;
     }
+
     return ERRORCODE_OK;
 }
 
