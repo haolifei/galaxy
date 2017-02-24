@@ -46,8 +46,10 @@ baidu::galaxy::util::ErrorCode InputStreamFile::ReadLine(std::string& line) {
     ssize_t rsize = getline(&buf, &size, file_);
 
     if (rsize == -1 && !feof(file_)) {
+        free(buf);
         return PERRORCODE(-1, errno_, "get line failed");
     } else if (feof(file_)) {
+        free(buf);
         return ERRORCODE_OK;
     }
 

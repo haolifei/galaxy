@@ -48,6 +48,8 @@ DEFINE_string(i, "", "");
 baidu::galaxy::util::ErrorCode GetProcessInfo(const std::string& root_path, int& pid);
 baidu::galaxy::util::ErrorCode ListContainer();
 baidu::galaxy::util::ErrorCode GotoJail();
+baidu::galaxy::util::ErrorCode KillContainer();
+
 void PrintHelp(const std::string& arg0);
 
 struct ContainerInfo {
@@ -74,6 +76,8 @@ int main(int argc, char *argv[])
         ec = ListContainer();
     } else if ("jail" == action) {
         ec = GotoJail();
+    } else if ("kill" == action) {
+        ec = KillContainer();
     } else if ("-h" == action) {
         PrintHelp(argv[0]);
     } else {
@@ -137,12 +141,39 @@ baidu::galaxy::util::ErrorCode ListContainer() {
     return ERRORCODE_OK;
 }
 
+baidu::galaxy::util::ErrorCode KillContainer() {
+    if (FLAGS_i.empty()) {
+        return ERRORCODE(-1, "'-i container_id' is needed");
+    }
+
+    if (FLAGS_w.empty()) {
+        return ERRORCODE(-1, "'-w workspace' is needed");
+    }
+
+    std::string container_id = FLAGS_i;
+    std::string work_dir = FLAGS_w;
+    const std::string root_path = work_dir + "/" + container_id;
+    int appworker_pid = -1;
+    baidu::galaxy::util::ErrorCode ec = GetProcessInfo(root_path, appworker_pid);
+    if (0 != ec.Code()) {
+        return ERRORCODE(-1, "get container info failed: %s", ec.Message().c_str());
+    }
+
+    if (0 != kill(appworker_pid, SIGKILL)) {
+        return ERRORCODE(-1, "kill %d failed", appworker_pid);
+    }
+
+    return ERRORCODE_OK;
+}
+
+
+
 baidu::galaxy::util::ErrorCode GotoJail() {
     if (FLAGS_i.empty()) {
         return ERRORCODE(-1, "'-i container_id' is needed");
     }
 
-    if (FLAGS_i.empty()) {
+    if (FLAGS_w.empty()) {
         return ERRORCODE(-1, "'-w workspace' is needed");
     }
 
@@ -219,7 +250,8 @@ baidu::galaxy::util::ErrorCode GotoJail() {
 void PrintHelp(const std::string& arg0) {
     std::cerr << "usage: \n"
         << arg0 << " ls [-w workspace_path]\n"
-        << arg0 << " jail -i container_id [-w workspace_path]\n";
+        << arg0 << " jail -i container_id [-w workspace_path]\n"
+        << arg0 << " kill -i contianer_id [-w workspace_path]\n";
 }
 
 
